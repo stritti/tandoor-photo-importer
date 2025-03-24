@@ -79,6 +79,10 @@ function takePicture() {
   }
 }
 
+const analyzeWithAI = ref(false)
+const aiPrompt = ref('Was ist auf diesem Bild zu sehen?')
+const isAnalyzing = ref(false)
+
 async function uploadPicture() {
   if (!photoRef.value || !photoRef.value.getAttribute('src')) {
     alert('Bitte zuerst ein Foto aufnehmen!')
@@ -98,6 +102,10 @@ async function uploadPicture() {
     const formData = new FormData()
     formData.append('image', blob, 'camera-image.png')
     
+    // Hinzufügen der KI-Analyse-Parameter, wenn aktiviert
+    formData.append('analyze_with_ai', analyzeWithAI.value.toString())
+    formData.append('prompt', aiPrompt.value)
+    
     // Backend-Basis-URL aus Umgebungsvariablen
     const backendBaseUrl = import.meta.env.VITE_BACKEND_BASE_URL || '';
     
@@ -113,12 +121,82 @@ async function uploadPicture() {
     
     const result = await uploadResponse.json()
     uploadStatus.value = 'Bild erfolgreich hochgeladen!'
+    
+    // Wenn KI-Analyse angefordert wurde, aber nicht direkt durchgeführt
+    if (analyzeWithAI.value && !result.ai_analysis) {
+      isAnalyzing.value = true
+      uploadStatus.value = 'Analysiere Bild mit KI...'
+      
+      try {
+        const analyzeResponse = await fetch(`${backendBaseUrl}/api/analyze-image`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            image_path: result.path,
+            prompt: aiPrompt.value
+          })
+        })
+        
+        if (!analyzeResponse.ok) {
+          throw new Error(`HTTP error! status: ${analyzeResponse.status}`)
+        }
+        
+        const analyzeResult = await analyzeResponse.json()
+        result.ai_analysis = analyzeResult.ai_analysis
+        uploadStatus.value = 'Bild erfolgreich analysiert!'
+      } catch (analyzeError) {
+        console.error('Fehler bei der KI-Analyse:', analyzeError)
+        uploadStatus.value = 'Fehler bei der KI-Analyse!'
+        result.ai_analysis_error = true
+      } finally {
+        isAnalyzing.value = false
+      }
+    }
+    
     emit('photo-uploaded', result)
   } catch (error) {
     console.error('Fehler beim Hochladen:', error)
     uploadStatus.value = 'Fehler beim Hochladen des Bildes!'
   } finally {
     isUploading.value = false
+  }
+}
+
+async function analyzeExistingImage(imagePath: string) {
+  if (!imagePath) return
+  
+  isAnalyzing.value = true
+  uploadStatus.value = 'Analysiere Bild mit KI...'
+  
+  try {
+    const backendBaseUrl = import.meta.env.VITE_BACKEND_BASE_URL || '';
+    const analyzeResponse = await fetch(`${backendBaseUrl}/api/analyze-image`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        image_path: imagePath,
+        prompt: aiPrompt.value
+      })
+    })
+    
+    if (!analyzeResponse.ok) {
+      throw new Error(`HTTP error! status: ${analyzeResponse.status}`)
+    }
+    
+    const result = await analyzeResponse.json()
+    uploadStatus.value = 'Bild erfolgreich analysiert!'
+    emit('photo-analyzed', result)
+    return result
+  } catch (error) {
+    console.error('Fehler bei der KI-Analyse:', error)
+    uploadStatus.value = 'Fehler bei der KI-Analyse!'
+    throw error
+  } finally {
+    isAnalyzing.value = false
   }
 }
 
@@ -134,7 +212,8 @@ defineExpose({
   takePicture,
   startCamera,
   stopCamera,
-  uploadPicture
+  uploadPicture,
+  analyzeExistingImage
 })
 </script>
 
@@ -143,15 +222,38 @@ defineExpose({
     <video ref="videoRef" class="camera-video">Video stream nicht verfügbar.</video>
     <div class="camera-controls">
       <button @click="takePicture" class="camera-button">Foto aufnehmen</button>
-      <button @click="uploadPicture" class="upload-button" :disabled="isUploading">
+      <button @click="uploadPicture" class="upload-button" :disabled="isUploading || isAnalyzing">
         {{ isUploading ? 'Wird hochgeladen...' : 'Foto hochladen' }}
       </button>
     </div>
+    
+    <div class="ai-options">
+      <div class="ai-checkbox">
+        <input type="checkbox" id="analyze-with-ai" v-model="analyzeWithAI" />
+        <label for="analyze-with-ai">Mit KI analysieren</label>
+      </div>
+      
+      <div v-if="analyzeWithAI" class="ai-prompt">
+        <label for="ai-prompt">Anweisung für KI:</label>
+        <input 
+          type="text" 
+          id="ai-prompt" 
+          v-model="aiPrompt" 
+          placeholder="Was ist auf diesem Bild zu sehen?"
+        />
+      </div>
+    </div>
+    
     <canvas ref="canvasRef" class="camera-canvas"></canvas>
     <div class="camera-output">
       <img ref="photoRef" alt="Das aufgenommene Foto erscheint hier." />
-      <p v-if="uploadStatus" class="upload-status" :class="{ 'success': uploadStatus.includes('erfolgreich'), 'error': uploadStatus.includes('Fehler') }">
+      <p v-if="uploadStatus" class="upload-status" :class="{ 
+        'success': uploadStatus.includes('erfolgreich'), 
+        'error': uploadStatus.includes('Fehler'),
+        'info': uploadStatus.includes('Analysiere')
+      }">
         {{ uploadStatus }}
+        <span v-if="isAnalyzing" class="loading-dots">...</span>
       </p>
     </div>
   </div>
@@ -252,5 +354,54 @@ defineExpose({
 .error {
   background-color: #f8d7da;
   color: #721c24;
+}
+
+.info {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.ai-options {
+  margin: 1rem 0;
+  padding: 0.5rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.ai-checkbox {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.ai-checkbox label {
+  margin-left: 0.5rem;
+  cursor: pointer;
+}
+
+.ai-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ai-prompt input {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.loading-dots {
+  display: inline-block;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { opacity: 0.3; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
 }
 </style>
