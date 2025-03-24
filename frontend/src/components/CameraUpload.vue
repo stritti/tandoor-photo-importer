@@ -98,11 +98,11 @@ async function uploadPicture() {
     const formData = new FormData()
     formData.append('image', blob, 'camera-image.png')
     
-    // API-Basis-URL aus Umgebungsvariablen
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api';
+    // Backend-Basis-URL aus Umgebungsvariablen
+    const backendBaseUrl = import.meta.env.VITE_BACKEND_BASE_URL || '';
     
     // Senden des Bildes an das Backend
-    const uploadResponse = await fetch(`${apiBaseUrl}/upload-image`, {
+    const uploadResponse = await fetch(`${backendBaseUrl}/api/upload-image`, {
       method: 'POST',
       body: formData
     })
