@@ -18,10 +18,10 @@ function handlePhotoUploaded(result: any) {
   <main>
     <div class="app-container">
       <h1>Kamera App</h1>
-      
-      <CameraUpload 
-        @photo-taken="handlePhotoTaken" 
-        @photo-uploaded="handlePhotoUploaded" 
+
+      <CameraUpload
+        @photo-taken="handlePhotoTaken"
+        @photo-uploaded="handlePhotoUploaded"
       />
 
       <div v-if="uploadResult" class="upload-result">
@@ -51,6 +51,7 @@ h1 {
   max-width: 600px;
   padding: 1rem;
   background-color: #f8f9fa;
+  color: #2c3e50;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   text-align: left;

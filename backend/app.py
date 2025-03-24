@@ -19,9 +19,9 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@app.route('/api/hello')
-def hello():
-    return jsonify(message="Hallo von Flask!")
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    return jsonify(status='ok')
 
 @app.route('/api/upload-image', methods=['POST'])
 def upload_image():
