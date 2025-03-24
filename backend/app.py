@@ -4,7 +4,8 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__, static_folder='../dist/frontend', static_url_path='/')
-CORS(app)
+# CORS für alle Routen aktivieren mit zusätzlichen Optionen
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
 # Konfiguration für Datei-Uploads
 UPLOAD_FOLDER = 'uploads'
@@ -24,27 +25,36 @@ def hello():
 
 @app.route('/api/upload-image', methods=['POST'])
 def upload_image():
-    if 'image' not in request.files:
-        return jsonify({'error': 'Keine Bilddatei gefunden'}), 400
-    
-    file = request.files['image']
-    
-    if file.filename == '':
-        return jsonify({'error': 'Keine Datei ausgewählt'}), 400
-    
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
+    try:
+        if 'image' not in request.files:
+            return jsonify({'error': 'Keine Bilddatei gefunden'}), 400
         
-        return jsonify({
-            'success': True,
-            'message': 'Bild erfolgreich hochgeladen',
-            'filename': filename,
-            'path': filepath
-        })
-    
-    return jsonify({'error': 'Dateityp nicht erlaubt'}), 400
+        file = request.files['image']
+        
+        if file.filename == '':
+            return jsonify({'error': 'Keine Datei ausgewählt'}), 400
+        
+        if file and allowed_file(file.filename):
+            # Eindeutigen Dateinamen generieren
+            import uuid
+            filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            
+            # Absoluten Pfad für die Antwort erstellen
+            abs_filepath = os.path.abspath(filepath)
+            
+            return jsonify({
+                'success': True,
+                'message': 'Bild erfolgreich hochgeladen',
+                'filename': filename,
+                'path': abs_filepath
+            })
+        
+        return jsonify({'error': 'Dateityp nicht erlaubt'}), 400
+    except Exception as e:
+        app.logger.error(f"Fehler beim Hochladen: {str(e)}")
+        return jsonify({'error': f'Serverfehler: {str(e)}'}), 500
 
 @app.route('/')
 def serve_frontend():
