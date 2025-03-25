@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 
 const videoRef = ref<HTMLVideoElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
@@ -10,6 +10,7 @@ const height = ref(0)
 const stream = ref<MediaStream | null>(null)
 const uploadStatus = ref('')
 const isUploading = ref(false)
+const activeTab = ref('camera') // 'camera' oder 'upload'
 
 // Emits für Eltern-Komponenten
 const emit = defineEmits(['photo-taken', 'photo-uploaded'])
@@ -85,21 +86,28 @@ async function takePicture() {
 const aiPrompt = ref('Was ist auf diesem Bild zu sehen?')
 const isAnalyzing = ref(false)
 
-async function uploadPicture() {
-  if (!photoRef.value || !photoRef.value.getAttribute('src')) {
-    alert('Bitte zuerst ein Foto aufnehmen!')
+async function uploadPicture(imageBlob?: Blob) {
+  if (!imageBlob && (!photoRef.value || !photoRef.value.getAttribute('src'))) {
+    alert('Bitte zuerst ein Foto aufnehmen oder auswählen!')
     return
   }
 
-  const imageData = photoRef.value.getAttribute('src')
   isUploading.value = true
   isAnalyzing.value = true
   uploadStatus.value = 'Bild wird hochgeladen...'
 
   try {
-    // Konvertieren des Base64-Bildes in einen Blob
-    const response = await fetch(imageData as string)
-    const blob = await response.blob()
+    let blob: Blob;
+    
+    if (imageBlob) {
+      // Verwende den übergebenen Blob direkt
+      blob = imageBlob;
+    } else {
+      // Konvertieren des Base64-Bildes in einen Blob
+      const imageData = photoRef.value!.getAttribute('src') as string;
+      const response = await fetch(imageData)
+      blob = await response.blob()
+    }
     
     // Erstellen eines FormData-Objekts für den Upload
     const formData = new FormData()
@@ -203,30 +211,99 @@ async function analyzeExistingImage(imagePath: string) {
   }
 }
 
+// Funktion zum Verarbeiten von hochgeladenen Dateien
+async function handleFileUpload(event: Event) {
+  const target = event.target as HTMLInputElement;
+  if (!target.files || target.files.length === 0) return;
+  
+  const file = target.files[0];
+  
+  // Zeige das ausgewählte Bild an
+  if (photoRef.value) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (photoRef.value && e.target) {
+        photoRef.value.setAttribute('src', e.target.result as string);
+        emit('photo-taken', e.target.result);
+      }
+    };
+    reader.readAsDataURL(file);
+    
+    // Automatisch hochladen
+    await uploadPicture(file);
+  }
+}
+
 onMounted(() => {
-  startCamera()
+  if (activeTab.value === 'camera') {
+    startCamera();
+  }
 })
 
 onUnmounted(() => {
   stopCamera()
 })
 
+// Wenn der Tab wechselt, Kamera entsprechend starten oder stoppen
+watch(activeTab, (newTab) => {
+  if (newTab === 'camera') {
+    startCamera();
+  } else {
+    stopCamera();
+  }
+});
+
 defineExpose({
   takePicture,
   startCamera,
   stopCamera,
   uploadPicture,
-  analyzeExistingImage
+  analyzeExistingImage,
+  handleFileUpload
 })
 </script>
 
 <template>
   <div class="camera-container">
-    <video ref="videoRef" class="camera-video">Video stream nicht verfügbar.</video>
-    <div class="camera-controls">
-      <button @click="takePicture" class="camera-button" :disabled="isUploading || isAnalyzing">
-        {{ isUploading ? 'Wird verarbeitet...' : 'Foto aufnehmen und analysieren' }}
+    <div class="camera-tabs">
+      <button 
+        @click="activeTab = 'camera'" 
+        :class="{ active: activeTab === 'camera' }"
+        class="tab-button"
+      >
+        Kamera
       </button>
+      <button 
+        @click="activeTab = 'upload'" 
+        :class="{ active: activeTab === 'upload' }"
+        class="tab-button"
+      >
+        Foto auswählen
+      </button>
+    </div>
+    
+    <div v-if="activeTab === 'camera'">
+      <video ref="videoRef" class="camera-video">Video stream nicht verfügbar.</video>
+      <div class="camera-controls">
+        <button @click="takePicture" class="camera-button" :disabled="isUploading || isAnalyzing">
+          {{ isUploading ? 'Wird verarbeitet...' : 'Foto aufnehmen und analysieren' }}
+        </button>
+      </div>
+    </div>
+    
+    <div v-else-if="activeTab === 'upload'" class="upload-container">
+      <input 
+        type="file" 
+        id="file-upload" 
+        accept="image/*" 
+        @change="handleFileUpload" 
+        class="file-input"
+        capture="environment"
+      />
+      <label for="file-upload" class="file-upload-button" :class="{ disabled: isUploading || isAnalyzing }">
+        {{ isUploading ? 'Wird verarbeitet...' : 'Foto auswählen' }}
+      </label>
+      <p class="upload-hint">Tippen Sie auf den Button, um ein Foto aus Ihrer Mediathek auszuwählen</p>
     </div>
     
     <div class="ai-options">
@@ -391,6 +468,69 @@ defineExpose({
   border: 1px solid #ddd;
   border-radius: 4px;
   width: 100%;
+}
+
+.camera-tabs {
+  display: flex;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.tab-button {
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  color: #6c757d;
+  border-bottom: 3px solid transparent;
+}
+
+.tab-button.active {
+  color: #4DBA87;
+  border-bottom: 3px solid #4DBA87;
+}
+
+.upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-upload-button {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background-color: #4DBA87;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  text-align: center;
+  transition: background-color 0.3s;
+}
+
+.file-upload-button:hover {
+  background-color: #3a9d6e;
+}
+
+.file-upload-button.disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.upload-hint {
+  margin-top: 1rem;
+  color: #6c757d;
+  font-size: 0.9rem;
+  text-align: center;
 }
 
 .spinner-container {
