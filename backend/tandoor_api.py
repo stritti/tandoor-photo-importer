@@ -113,6 +113,7 @@ def import_recipe(recipe_data, auth_token):
             
     except Exception as e:
         logger.error(f"Fehler beim Rezept-Import: {str(e)}")
+        logger.exception("Fehler beim Rezept-Import", exc_info=True, stack_info=True, extra={"recipe_data": recipe_data})
         return {
             "success": False,
             "error": str(e)
