@@ -52,7 +52,7 @@ class AIService:
                 base64_image = base64.b64encode(image_file.read()).decode('utf-8')
             
             # Initialisiere den OpenAI-Client nur mit dem API-Key
-            # Die neuere Version der OpenAI-Bibliothek unterstützt 'proxies' nicht mehr als direktes Argument
+            # Keine zusätzlichen Parameter wie 'proxies' verwenden
             client = OpenAI(api_key=OPENAI_API_KEY)
             
             response = client.chat.completions.create(
