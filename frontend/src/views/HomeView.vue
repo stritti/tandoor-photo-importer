@@ -77,8 +77,7 @@ watch(aiResult, (newValue) => {
           <pre>{{ JSON.stringify(uploadResult, null, 2) }}</pre>
         </div>
         
-        
-        <div v-else-if="aiResult" class="ai-result">
+        <div v-if="aiResult" class="ai-result">
           <h3>KI-Analyse:</h3>
           <div class="ai-provider">
             <strong>Anbieter:</strong> {{ aiResult.provider }}
