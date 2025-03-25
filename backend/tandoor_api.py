@@ -95,7 +95,7 @@ def import_recipe(recipe_data, auth_token):
         }
         
         data = {
-            "data": import_data,
+            "data": json.dumps(import_data),
             "url": ""
         }
 
