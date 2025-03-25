@@ -14,7 +14,9 @@ const importResult = ref<any>(null)
 const showAuthForm = ref(false)
 const username = ref('')
 const password = ref('')
-const authToken = ref('')
+import { useSessionStorage } from '@vueuse/core'
+
+const authToken = useSessionStorage('tandoorAuthToken', '')
 const isAuthenticating = ref(false)
 const authError = ref('')
 
