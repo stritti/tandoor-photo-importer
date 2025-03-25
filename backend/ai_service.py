@@ -1,5 +1,8 @@
 import os
 import base64
+import logging
+import traceback
+import inspect
 from decouple import config
 import requests
 from openai import OpenAI
@@ -9,6 +12,13 @@ AI_PROVIDER = config('AI_PROVIDER', default='openai')
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
 OPENAI_MODEL = config('OPENAI_MODEL', default='gpt-4-vision-preview')
 MAX_TOKENS = config('MAX_TOKENS', default=300, cast=int)
+
+# Logger konfigurieren
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger('ai_service')
 
 class AIService:
     """Service zur Verarbeitung von Bildern mit verschiedenen KI-Modellen"""
@@ -25,13 +35,20 @@ class AIService:
         Returns:
             dict: Ergebnis der Analyse mit Anbieter und Antwort
         """
+        logger.info(f"Starte Bildanalyse mit Prompt: {prompt}")
+        logger.info(f"Bildpfad: {image_path}")
+        logger.info(f"Konfigurierter AI-Provider: {AI_PROVIDER}")
+        
         provider = AI_PROVIDER.lower()
         
         if provider == 'openai':
+            logger.info("Verwende OpenAI für die Analyse")
             return AIService._analyze_with_openai(image_path, prompt)
         elif provider == 'custom':
+            logger.info("Verwende Custom API für die Analyse")
             return AIService._analyze_with_custom_api(image_path, prompt)
         else:
+            logger.error(f"KI-Anbieter '{provider}' nicht unterstützt oder konfiguriert")
             return {
                 "provider": "none",
                 "error": f"KI-Anbieter '{provider}' nicht unterstützt oder konfiguriert"
@@ -41,20 +58,34 @@ class AIService:
     def _analyze_with_openai(image_path, prompt):
         """Analysiert ein Bild mit OpenAI Vision API"""
         if not OPENAI_API_KEY:
+            logger.error("OpenAI API-Schlüssel nicht konfiguriert")
             return {
                 "provider": "openai",
                 "error": "OpenAI API-Schlüssel nicht konfiguriert"
             }
         
         try:
+            logger.info("Starte OpenAI Bildanalyse")
+            logger.debug(f"Verwende OpenAI Modell: {OPENAI_MODEL}")
+            logger.debug(f"Max Tokens: {MAX_TOKENS}")
+            
             # Bild in base64 konvertieren
             with open(image_path, "rb") as image_file:
                 base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+                logger.debug(f"Bild erfolgreich in base64 konvertiert")
+            
+            # Initialisiere den OpenAI-Client
+            logger.debug("Initialisiere OpenAI Client")
+            logger.debug(f"OpenAI API Key vorhanden: {bool(OPENAI_API_KEY)}")
+            
+            # Zeige alle verfügbaren Parameter für den OpenAI-Konstruktor
+            logger.debug(f"OpenAI.__init__ Parameter: {inspect.signature(OpenAI.__init__)}")
             
             # Initialisiere den OpenAI-Client nur mit dem API-Key
-            # Keine zusätzlichen Parameter wie 'proxies' verwenden
             client = OpenAI(api_key=OPENAI_API_KEY)
+            logger.debug("OpenAI Client erfolgreich initialisiert")
             
+            logger.debug("Sende Anfrage an OpenAI API")
             response = client.chat.completions.create(
                 model=OPENAI_MODEL,
                 messages=[
@@ -73,14 +104,19 @@ class AIService:
                 ],
                 max_tokens=MAX_TOKENS
             )
+            logger.debug("Antwort von OpenAI API erhalten")
             
-            return {
+            result = {
                 "provider": "openai",
                 "response": response.choices[0].message.content,
                 "model": OPENAI_MODEL
             }
+            logger.info("OpenAI Bildanalyse erfolgreich abgeschlossen")
+            return result
             
         except Exception as e:
+            logger.error(f"Fehler bei OpenAI Bildanalyse: {str(e)}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return {
                 "provider": "openai",
                 "error": str(e)
@@ -96,17 +132,23 @@ class AIService:
         CUSTOM_API_KEY = config('CUSTOM_API_KEY', default='')
         
         if not CUSTOM_API_URL or not CUSTOM_API_KEY:
+            logger.error("Benutzerdefinierte API nicht konfiguriert")
             return {
                 "provider": "custom",
                 "error": "Benutzerdefinierte API nicht konfiguriert"
             }
         
         try:
+            logger.info("Starte Custom API Bildanalyse")
+            logger.debug(f"Custom API URL: {CUSTOM_API_URL}")
+            logger.debug(f"Custom API Key vorhanden: {bool(CUSTOM_API_KEY)}")
+            
             with open(image_path, "rb") as image_file:
                 files = {"image": image_file}
                 data = {"prompt": prompt}
                 headers = {"Authorization": f"Bearer {CUSTOM_API_KEY}"}
                 
+                logger.debug("Sende Anfrage an Custom API")
                 response = requests.post(
                     CUSTOM_API_URL,
                     files=files,
@@ -115,17 +157,21 @@ class AIService:
                 )
                 
                 if response.status_code == 200:
+                    logger.info("Custom API Anfrage erfolgreich")
                     return {
                         "provider": "custom",
                         "response": response.json()
                     }
                 else:
+                    logger.error(f"Custom API Fehler: {response.status_code} - {response.text}")
                     return {
                         "provider": "custom",
                         "error": f"API-Fehler: {response.status_code} - {response.text}"
                     }
                     
         except Exception as e:
+            logger.error(f"Fehler bei Custom API Bildanalyse: {str(e)}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return {
                 "provider": "custom",
                 "error": str(e)
