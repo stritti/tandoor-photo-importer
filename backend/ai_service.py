@@ -161,16 +161,22 @@ class AIService:
             logger.debug(f"Verwende Anthropic Modell: {ANTHROPIC_MODEL}")
             logger.debug(f"Max Tokens: {MAX_TOKENS}")
             
-            # Bild in base64 konvertieren
+            # Bild in base64 konvertieren und Medientyp bestimmen
             with open(image_path, "rb") as image_file:
                 base64_image = base64.b64encode(image_file.read()).decode('utf-8')
-                image_data = f"data:image/jpeg;base64,{base64_image}"
+                
+                # Medientyp basierend auf Dateiendung bestimmen
+                media_type = "image/jpeg"  # Standard
+                if image_path.lower().endswith('.png'):
+                    media_type = "image/png"
+                elif image_path.lower().endswith('.gif'):
+                    media_type = "image/gif"
             
             # Initialisiere den Anthropic-Client
             logger.info("Initialisiere Anthropic Client")
             client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
             
-            logger.info("Sende Anfrage an Anthropic API")
+            logger.info(f"Sende Anfrage an Anthropic API mit Medientyp: {media_type}")
             message = client.messages.create(
                 model=ANTHROPIC_MODEL,
                 max_tokens=MAX_TOKENS,
@@ -179,7 +185,7 @@ class AIService:
                         "role": "user",
                         "content": [
                             {"type": "text", "text": prompt},
-                            {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": base64_image}}
+                            {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": base64_image}}
                         ]
                     }
                 ]
