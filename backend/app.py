@@ -45,9 +45,7 @@ def upload_image():
             
             # Absoluten Pfad für die Antwort erstellen
             abs_filepath = os.path.abspath(filepath)
-            
-            # Hole den Prompt-Typ aus dem Request oder verwende "general" als Standard
-            prompt_type = request.form.get('prompt_type', 'general')
+    
             
             response_data = {
                 'success': True,
@@ -57,7 +55,7 @@ def upload_image():
             }
             
             # Führe immer eine KI-Analyse durch mit dem konfigurierten Prompt
-            ai_result = AIService.analyze_image(filepath, get_prompt(prompt_type))
+            ai_result = AIService.analyze_image(filepath, get_prompt('recipe'))
             response_data['ai_analysis'] = ai_result
             
             return jsonify(response_data)
@@ -65,34 +63,6 @@ def upload_image():
         return jsonify({'error': 'Dateityp nicht erlaubt'}), 400
     except Exception as e:
         app.logger.error(f"Fehler beim Hochladen: {str(e)}")
-        return jsonify({'error': f'Serverfehler: {str(e)}'}), 500
-
-@app.route('/api/analyze-image', methods=['POST'])
-def analyze_image():
-    try:
-        data = request.json
-        
-        if not data or 'image_path' not in data:
-            return jsonify({'error': 'Kein Bildpfad angegeben'}), 400
-        
-        image_path = data['image_path']
-        prompt_type = data.get('prompt_type', 'general')
-        
-        # Überprüfen, ob die Datei existiert
-        if not os.path.exists(image_path):
-            return jsonify({'error': 'Bild nicht gefunden'}), 404
-        
-        # Bild mit KI analysieren und den konfigurierten Prompt verwenden
-        ai_result = AIService.analyze_image(image_path, get_prompt(prompt_type))
-        
-        return jsonify({
-            'success': True,
-            'image_path': image_path,
-            'ai_analysis': ai_result
-        })
-        
-    except Exception as e:
-        app.logger.error(f"Fehler bei der Bildanalyse: {str(e)}")
         return jsonify({'error': f'Serverfehler: {str(e)}'}), 500
 
 @app.route('/')
