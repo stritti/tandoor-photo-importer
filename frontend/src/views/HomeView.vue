@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import CameraUpload from '@/components/CameraUpload.vue'
 
 const uploadResult = ref<any>(null)
 const aiResult = ref<any>(null)
 const cameraUploadRef = ref<InstanceType<typeof CameraUpload> | null>(null)
+const isLoading = ref(false)
 
 function handlePhotoTaken(photoData: string) {
   console.log('Foto aufgenommen!')
@@ -20,6 +21,9 @@ function handlePhotoUploaded(result: any) {
   // Wenn KI-Analyse vorhanden ist, extrahieren
   if (result.ai_analysis) {
     aiResult.value = result.ai_analysis
+    isLoading.value = false
+  } else {
+    isLoading.value = true
   }
 }
 
@@ -29,6 +33,7 @@ async function analyzeImage() {
     return
   }
   
+  isLoading.value = true
   try {
     if (cameraUploadRef.value) {
       const result = await cameraUploadRef.value.analyzeExistingImage(uploadResult.value.path)
@@ -36,12 +41,27 @@ async function analyzeImage() {
     }
   } catch (error) {
     console.error('Fehler bei der Analyse:', error)
+  } finally {
+    isLoading.value = false
   }
 }
+
+// Wenn aiResult gesetzt wird, Loading-Status zurücksetzen
+watch(aiResult, (newValue) => {
+  if (newValue) {
+    isLoading.value = false
+  }
+})
 </script>
 
 <template>
   <main>
+    <!-- Loading Overlay -->
+    <div v-if="isLoading" class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">KI analysiert das Bild...</div>
+    </div>
+    
     <div class="app-container">
       <h1>Kamera App mit KI-Analyse</h1>
 
@@ -57,12 +77,6 @@ async function analyzeImage() {
           <pre>{{ JSON.stringify(uploadResult, null, 2) }}</pre>
         </div>
         
-        <div v-if="uploadResult && !aiResult" class="ai-result loading">
-          <h3>KI-Analyse wird geladen...</h3>
-          <div class="spinner-container">
-            <div class="spinner"></div>
-          </div>
-        </div>
         
         <div v-else-if="aiResult" class="ai-result">
           <h3>KI-Analyse:</h3>
@@ -150,29 +164,39 @@ h1 {
   margin: 0.5rem 0 0 0;
 }
 
-.spinner-container {
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  margin: 20px 0;
+  align-items: center;
+  z-index: 1000;
 }
 
-.spinner {
-  border: 4px solid rgba(0, 0, 0, 0.1);
-  width: 40px;
-  height: 40px;
+.loading-spinner {
+  border: 6px solid rgba(255, 255, 255, 0.3);
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  border-left-color: #4DBA87;
+  border-top-color: #4DBA87;
   animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  color: white;
+  font-size: 1.2rem;
+  margin-top: 1rem;
+  font-weight: bold;
 }
 
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}
-
-.ai-result.loading {
-  background-color: #f0f7ff;
-  text-align: center;
 }
 
 .analyze-button {

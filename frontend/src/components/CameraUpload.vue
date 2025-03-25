@@ -93,6 +93,7 @@ async function uploadPicture() {
 
   const imageData = photoRef.value.getAttribute('src')
   isUploading.value = true
+  isAnalyzing.value = true
   uploadStatus.value = 'Bild wird hochgeladen...'
 
   try {
