@@ -74,14 +74,9 @@ class AIService:
             # Bild in base64 konvertieren
             with open(image_path, "rb") as image_file:
                 base64_image = base64.b64encode(image_file.read()).decode('utf-8')
-                logger.debug(f"Bild erfolgreich in base64 konvertiert")
             
             # Initialisiere den OpenAI-Client
-            logger.debug("Initialisiere OpenAI Client")
-            logger.debug(f"OpenAI API Key vorhanden: {bool(OPENAI_API_KEY)}")
-            
-            # Zeige alle verfügbaren Parameter für den OpenAI-Konstruktor
-            logger.debug(f"OpenAI.__init__ Parameter: {inspect.signature(OpenAI.__init__)}")
+            logger.info("Initialisiere OpenAI Client")
             
             # OpenAI-Client initialisieren
             client = None
