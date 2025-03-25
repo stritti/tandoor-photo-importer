@@ -1,6 +1,9 @@
 import base64
 import logging
 import traceback
+import os
+from io import BytesIO
+from PIL import Image
 from decouple import config
 import anthropic
 
@@ -32,12 +35,8 @@ class AnthropicProvider(BaseAIProvider):
             logger.debug(f"Verwende Anthropic Modell: {ANTHROPIC_MODEL}")
             logger.debug(f"Max Tokens: {MAX_TOKENS}")
             
-            # Bild in base64 konvertieren und Medientyp bestimmen
-            with open(image_path, "rb") as image_file:
-                base64_image = base64.b64encode(image_file.read()).decode('utf-8')
-                
-                # Medientyp basierend auf Dateiendung bestimmen
-                media_type = self._determine_media_type(image_path)
+            # Bild komprimieren und in base64 konvertieren
+            base64_image, media_type = self._compress_and_encode_image(image_path)
             
             # Initialisiere den Anthropic-Client
             logger.info("Initialisiere Anthropic Client")
@@ -78,3 +77,80 @@ class AnthropicProvider(BaseAIProvider):
         elif image_path.lower().endswith('.gif'):
             media_type = "image/gif"
         return media_type
+        
+    def _compress_and_encode_image(self, image_path, max_size_mb=4.5, quality_start=85):
+        """
+        Komprimiert ein Bild und konvertiert es in base64
+        
+        Args:
+            image_path: Pfad zur Bilddatei
+            max_size_mb: Maximale Größe in MB
+            quality_start: Anfängliche JPEG-Qualität
+            
+        Returns:
+            tuple: (base64-kodiertes Bild, Medientyp)
+        """
+        # Medientyp bestimmen
+        original_media_type = self._determine_media_type(image_path)
+        
+        # Bild öffnen
+        img = Image.open(image_path)
+        
+        # Konvertieren zu RGB, falls es sich um RGBA handelt (für JPEG-Konvertierung)
+        if img.mode == 'RGBA':
+            img = img.convert('RGB')
+        
+        # Maximale Größe in Bytes
+        max_size_bytes = max_size_mb * 1024 * 1024
+        
+        # Ausgabeformat bestimmen (immer JPEG für Kompression)
+        output_format = "JPEG"
+        media_type = "image/jpeg"
+        
+        # Komprimierungsschleife
+        quality = quality_start
+        img_io = BytesIO()
+        img.save(img_io, format=output_format, quality=quality)
+        
+        # Wenn das Bild bereits klein genug ist, verwenden wir es direkt
+        if img_io.tell() <= max_size_bytes:
+            img_io.seek(0)
+            return base64.b64encode(img_io.read()).decode('utf-8'), media_type
+        
+        # Sonst reduzieren wir die Qualität schrittweise
+        while quality > 10 and img_io.tell() > max_size_bytes:
+            quality -= 10
+            img_io = BytesIO()
+            img.save(img_io, format=output_format, quality=quality)
+        
+        # Wenn die Qualitätsreduktion nicht ausreicht, verkleinern wir das Bild
+        if img_io.tell() > max_size_bytes:
+            # Originalgröße
+            width, height = img.size
+            
+            # Skalierungsfaktor berechnen
+            scale_factor = 0.9  # Reduziere um 10% in jeder Iteration
+            
+            while img_io.tell() > max_size_bytes and scale_factor > 0.1:
+                # Neue Größe berechnen
+                new_width = int(width * scale_factor)
+                new_height = int(height * scale_factor)
+                
+                # Bild verkleinern
+                resized_img = img.resize((new_width, new_height), Image.LANCZOS)
+                
+                # Speichern und Größe prüfen
+                img_io = BytesIO()
+                resized_img.save(img_io, format=output_format, quality=quality)
+                
+                # Wenn immer noch zu groß, weiter verkleinern
+                if img_io.tell() > max_size_bytes:
+                    scale_factor *= 0.9
+                else:
+                    break
+        
+        # Zurücksetzen des Positionszeigers und Rückgabe des komprimierten Bildes
+        img_io.seek(0)
+        logger.info(f"Bild komprimiert: Originalgröße unbekannt -> {img_io.tell()/1024/1024:.2f} MB (Qualität: {quality})")
+        
+        return base64.b64encode(img_io.read()).decode('utf-8'), media_type
