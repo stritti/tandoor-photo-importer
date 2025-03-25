@@ -246,10 +246,12 @@ defineExpose({
       <p v-if="uploadStatus" class="upload-status" :class="{ 
         'success': uploadStatus.includes('erfolgreich'), 
         'error': uploadStatus.includes('Fehler'),
-        'info': uploadStatus.includes('Analysiere')
+        'info': uploadStatus.includes('Analysiere') || uploadStatus.includes('hochgeladen')
       }">
         {{ uploadStatus }}
-        <span v-if="isAnalyzing" class="loading-dots">...</span>
+        <div v-if="isUploading || isAnalyzing" class="spinner-container">
+          <div class="spinner"></div>
+        </div>
       </p>
     </div>
   </div>
@@ -390,14 +392,23 @@ defineExpose({
   width: 100%;
 }
 
-.loading-dots {
-  display: inline-block;
-  animation: loading 1.5s infinite;
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
 }
 
-@keyframes loading {
-  0% { opacity: 0.3; }
-  50% { opacity: 1; }
-  100% { opacity: 0.3; }
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border-left-color: #4DBA87;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 </style>

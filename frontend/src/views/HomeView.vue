@@ -57,7 +57,14 @@ async function analyzeImage() {
           <pre>{{ JSON.stringify(uploadResult, null, 2) }}</pre>
         </div>
         
-        <div v-if="aiResult" class="ai-result">
+        <div v-if="uploadResult && !aiResult" class="ai-result loading">
+          <h3>KI-Analyse wird geladen...</h3>
+          <div class="spinner-container">
+            <div class="spinner"></div>
+          </div>
+        </div>
+        
+        <div v-else-if="aiResult" class="ai-result">
           <h3>KI-Analyse:</h3>
           <div class="ai-provider">
             <strong>Anbieter:</strong> {{ aiResult.provider }}
@@ -141,6 +148,31 @@ h1 {
 .ai-response p {
   white-space: pre-wrap;
   margin: 0.5rem 0 0 0;
+}
+
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border-left-color: #4DBA87;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.ai-result.loading {
+  background-color: #f0f7ff;
+  text-align: center;
 }
 
 .analyze-button {
