@@ -2,12 +2,16 @@ import os
 import uuid
 import json
 import re
+import logging
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from ai_service import AIService
 from ai_providers.prompt_config import get_prompt
 from tandoor_api import import_recipe, get_auth_token
+
+# Logging konfigurieren
+logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__, static_folder='../dist/frontend', static_url_path='/')
 # CORS für alle Routen aktivieren mit zusätzlichen Optionen
