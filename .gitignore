@@ -134,3 +134,9 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+.aider*
+
+# Python
+backend/uploads/
+backend/venv/
+__pycache__/

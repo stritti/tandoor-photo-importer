@@ -1,14 +1,8 @@
 import logging
 from ai_providers.provider_factory import AIProviderFactory
 
-# Logger konfigurieren
-logging.basicConfig(
-    level=logging.WARNING,  # Root-Logger auf WARNING setzen
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
 # Nur für den ai_service Logger INFO-Level aktivieren
 logger = logging.getLogger('ai_service')
-logger.setLevel(logging.INFO)
 
 class AIService:
     """Service zur Verarbeitung von Bildern mit verschiedenen KI-Modellen"""
@@ -25,8 +19,7 @@ class AIService:
         Returns:
             dict: Ergebnis der Analyse mit Anbieter und Antwort
         """
-        logger.info(f"Starte Bildanalyse mit Prompt: {prompt}")
-        logger.info(f"Bildpfad: {image_path}")
+        logger.info(f"Starte Bildanalyse für Bild: {image_path}")
         
         try:
             # Provider über Factory holen

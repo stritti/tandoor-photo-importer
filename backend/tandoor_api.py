@@ -109,7 +109,7 @@ def import_recipe(recipe_data, auth_token):
         )
         
         if response.status_code in [200, 201]:
-            logger.info("Rezept erfolgreich in Tandoor importiert")
+            logger.debug(f"{response.status_code}: Rezept-Import-Antwort: {response.json()}")
             return {
                 "success": True,
                 "recipe_id": response.json().get("id"),

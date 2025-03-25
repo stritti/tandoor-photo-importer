@@ -10,8 +10,12 @@ from ai_service import AIService
 from ai_providers.prompt_config import get_prompt
 from tandoor_api import import_recipe, get_auth_token
 
-# Logging konfigurieren
-logging.basicConfig(level=logging.INFO)
+
+# Logger konfigurieren
+logging.basicConfig(
+    level=logging.INFO,  # Root-Logger auf WARNING setzen
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 
 app = Flask(__name__, static_folder='../dist/frontend', static_url_path='/')
 # CORS für alle Routen aktivieren mit zusätzlichen Optionen

@@ -132,7 +132,7 @@ async function uploadPicture(imageBlob?: Blob) {
 
     const result = await uploadResponse.json()
     uploadStatus.value = 'Bild erfolgreich hochgeladen!'
-    
+
     // Spinner beenden, sobald die Antwort zurückkommt
     isUploading.value = false
     isAnalyzing.value = false
@@ -204,7 +204,6 @@ async function analyzeExistingImage(imagePath: string) {
 
     const result = await analyzeResponse.json()
     uploadStatus.value = 'Bild erfolgreich analysiert!'
-    emit('photo-analyzed', result)
     return result
   } catch (error) {
     console.error('Fehler bei der KI-Analyse:', error)

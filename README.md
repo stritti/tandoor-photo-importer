@@ -31,7 +31,7 @@ cd frontend
 npm install
 
 # Start development server
-npm run serve
+npm start
 ```
 
 The frontend will be available at http://localhost:8080 and will proxy API requests to the backend.
