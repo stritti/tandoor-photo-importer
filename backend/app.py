@@ -148,6 +148,12 @@ def import_to_tandoor():
         # Ensure recipe_json_ld is a dictionary
         if isinstance(recipe_json_ld, str):
             recipe_json_ld = json.loads(recipe_json_ld)
+            app.logger.error(f"recipe_json_ld was a string: {recipe_json_ld}")
+        elif not isinstance(recipe_json_ld, dict):
+            return jsonify({'error': 'Ungültige Rezeptdaten'}), 400
+        if not isinstance(auth_token, str):
+            return jsonify({'error': 'Ungültiges Auth-Token'}), 400
+        # Importiere das Rezept in Tandoor
         result = import_recipe(recipe_json_ld, auth_token)
         
         return jsonify(result)
