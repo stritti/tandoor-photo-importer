@@ -132,6 +132,10 @@ async function uploadPicture(imageBlob?: Blob) {
 
     const result = await uploadResponse.json()
     uploadStatus.value = 'Bild erfolgreich hochgeladen!'
+    
+    // Spinner beenden, sobald die Antwort zurückkommt
+    isUploading.value = false
+    isAnalyzing.value = false
 
     // Wenn KI-Analyse nicht direkt durchgeführt wurde
     if (!result.ai_analysis) {

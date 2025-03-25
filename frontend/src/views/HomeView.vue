@@ -21,10 +21,10 @@ function handlePhotoUploaded(result: any) {
   // Wenn KI-Analyse vorhanden ist, extrahieren
   if (result.ai_analysis) {
     aiResult.value = result.ai_analysis
-    isLoading.value = false
-  } else {
-    isLoading.value = true
   }
+  
+  // Immer den Loading-Status zurücksetzen, wenn Ergebnisse zurückkommen
+  isLoading.value = false
 }
 
 async function analyzeImage() {
