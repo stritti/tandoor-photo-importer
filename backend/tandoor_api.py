@@ -82,7 +82,7 @@ def import_recipe(recipe_data, auth_token):
             recipe_data = json.loads(recipe_data)
 
         # Prepare the data for import
-        import_data = prepare_recipe_data(json.loads(recipe_data))
+        import_data = prepare_recipe_data(recipe_data)
         
         # Sende Anfrage an Tandoor API
         headers = {
