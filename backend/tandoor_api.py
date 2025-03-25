@@ -97,7 +97,7 @@ def import_recipe(recipe_data, auth_token):
         logger.info(f"Sende Anfrage an Tandoor API: {TANDOOR_API_URL}/api/recipe/")
         response = requests.post(
             f"{TANDOOR_API_URL}/api/recipe-from-source/",
-            json= f"data: {import_data}",
+            json=import_data,
             headers=headers
         )
         
