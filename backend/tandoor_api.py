@@ -84,19 +84,20 @@ def import_recipe(recipe_data, auth_token):
         logger.info(f"Rezeptdaten: {recipe_data}")
 
         # Prepare the data for import
-        import_data = prepare_recipe_data(recipe_data)
+        # import_data = prepare_recipe_data(recipe_data)
+        import_data = recipe_data
         logger.info(f"Vorbereitete Rezeptdaten: {import_data}")
         
         # Sende Anfrage an Tandoor API
         headers = {
-            "Authorization": f"Token {auth_token}",
+            "Authorization": f"Bearer {auth_token}",
             "Content-Type": "application/json"
         }
         
         logger.info(f"Sende Anfrage an Tandoor API: {TANDOOR_API_URL}/api/recipe/")
         response = requests.post(
-            f"{TANDOOR_API_URL}/api/recipe/",
-            json=import_data,
+            f"{TANDOOR_API_URL}/api/recipe-from-source/",
+            json= f"data: {import_data}",
             headers=headers
         )
         
