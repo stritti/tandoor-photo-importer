@@ -1,8 +1,10 @@
 import os
+import uuid
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from ai_service import AIService
+from ai_providers.prompt_config import get_prompt
 
 app = Flask(__name__, static_folder='../dist/frontend', static_url_path='/')
 # CORS für alle Routen aktivieren mit zusätzlichen Optionen
@@ -37,7 +39,6 @@ def upload_image():
         
         if file and allowed_file(file.filename):
             # Eindeutigen Dateinamen generieren
-            import uuid
             filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
@@ -45,9 +46,8 @@ def upload_image():
             # Absoluten Pfad für die Antwort erstellen
             abs_filepath = os.path.abspath(filepath)
             
-            # Prüfen, ob eine KI-Analyse angefordert wurde
-            analyze_with_ai = request.form.get('analyze_with_ai', 'false').lower() == 'true'
-            prompt = request.form.get('prompt', 'Was ist auf diesem Bild zu sehen?')
+            # Hole den Prompt-Typ aus dem Request oder verwende "general" als Standard
+            prompt_type = request.form.get('prompt_type', 'general')
             
             response_data = {
                 'success': True,
@@ -56,10 +56,9 @@ def upload_image():
                 'path': abs_filepath
             }
             
-            # Wenn KI-Analyse angefordert, Bild analysieren
-            if analyze_with_ai:
-                ai_result = AIService.analyze_image(filepath, prompt)
-                response_data['ai_analysis'] = ai_result
+            # Führe immer eine KI-Analyse durch mit dem konfigurierten Prompt
+            ai_result = AIService.analyze_image(filepath, get_prompt(prompt_type))
+            response_data['ai_analysis'] = ai_result
             
             return jsonify(response_data)
         
@@ -77,14 +76,14 @@ def analyze_image():
             return jsonify({'error': 'Kein Bildpfad angegeben'}), 400
         
         image_path = data['image_path']
-        prompt = data.get('prompt', 'Was ist auf diesem Bild zu sehen?')
+        prompt_type = data.get('prompt_type', 'general')
         
         # Überprüfen, ob die Datei existiert
         if not os.path.exists(image_path):
             return jsonify({'error': 'Bild nicht gefunden'}), 404
         
-        # Bild mit KI analysieren
-        ai_result = AIService.analyze_image(image_path, prompt)
+        # Bild mit KI analysieren und den konfigurierten Prompt verwenden
+        ai_result = AIService.analyze_image(image_path, get_prompt(prompt_type))
         
         return jsonify({
             'success': True,
