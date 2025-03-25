@@ -62,7 +62,7 @@ function stopCamera() {
   }
 }
 
-function takePicture() {
+async function takePicture() {
   if (width.value && height.value && canvasRef.value && videoRef.value) {
     const context = canvasRef.value.getContext('2d')
     if (context) {
@@ -74,6 +74,9 @@ function takePicture() {
       if (photoRef.value) {
         photoRef.value.setAttribute('src', data)
         emit('photo-taken', data)
+        
+        // Automatisch hochladen, nachdem das Foto aufgenommen wurde
+        await uploadPicture()
       }
     }
   }
@@ -220,9 +223,8 @@ defineExpose({
   <div class="camera-container">
     <video ref="videoRef" class="camera-video">Video stream nicht verfügbar.</video>
     <div class="camera-controls">
-      <button @click="takePicture" class="camera-button">Foto aufnehmen</button>
-      <button @click="uploadPicture" class="upload-button" :disabled="isUploading || isAnalyzing">
-        {{ isUploading ? 'Wird hochgeladen...' : 'Foto hochladen' }}
+      <button @click="takePicture" class="camera-button" :disabled="isUploading || isAnalyzing">
+        {{ isUploading ? 'Wird verarbeitet...' : 'Foto aufnehmen und analysieren' }}
       </button>
     </div>
     
