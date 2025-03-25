@@ -145,6 +145,9 @@ def import_to_tandoor():
         auth_token = data['auth_token']
         
         # Rezept in Tandoor importieren
+        # Ensure recipe_json_ld is a dictionary
+        if isinstance(recipe_json_ld, str):
+            recipe_json_ld = json.loads(recipe_json_ld)
         result = import_recipe(recipe_json_ld, auth_token)
         
         return jsonify(result)
