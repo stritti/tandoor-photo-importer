@@ -82,7 +82,7 @@ def import_recipe(recipe_data, auth_token):
             recipe_data = json.loads(recipe_data)
 
         # Prepare the data for import
-        import_data = prepare_recipe_data(recipe_data)
+        import_data = prepare_recipe_data(json.loads(recipe_data))
         
         # Sende Anfrage an Tandoor API
         headers = {
@@ -129,11 +129,7 @@ def prepare_recipe_data(recipe_json_ld):
         dict: Für Tandoor formatierte Daten
     """
     try:
-        # Wenn recipe_json_ld ein String ist, konvertiere zu JSON
-        if isinstance(recipe_json_ld, str):
-            recipe_data = json.loads(recipe_json_ld)
-        else:
-            recipe_data = recipe_json_ld
+        recipe_data = recipe_json_ld
             
         # Extrahiere die relevanten Daten aus dem JSON-LD Format
         tandoor_data = {
