@@ -164,16 +164,16 @@ def prepare_recipe_data(recipe_json_ld):
                 # Wenn Anweisungen als Liste vorliegen
                 for i, instruction in enumerate(instructions):
                     if i < len(tandoor_data.get("steps", [])):
-                        # Füge Anweisung zu existierendem Schritt hinzu
-                        tandoor_data["steps"][i]["instruction"] = instruction.get("text", instruction)
+                        # Add instruction to existing step
+                        tandoor_data["steps"][i]["instruction"] = instruction if isinstance(instruction, str) else instruction.get("text", "")
                     else:
-                        # Erstelle neuen Schritt
+                        # Create new step
                         tandoor_data.setdefault("steps", []).append({
-                            "instruction": instruction.get("text", instruction),
+                            "instruction": instruction if isinstance(instruction, str) else instruction.get("text", ""),
                             "ingredients": []
                         })
-            else:
-                # Wenn Anweisungen als String vorliegen
+            elif isinstance(instructions, str):
+                # If instructions is a string
                 if tandoor_data.get("steps"):
                     tandoor_data["steps"][0]["instruction"] = instructions
                 else:
