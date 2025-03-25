@@ -34,11 +34,11 @@ function startCamera() {
   videoRef.value.addEventListener('canplay', () => {
     if (!streaming.value && videoRef.value) {
       height.value = videoRef.value.videoHeight / (videoRef.value.videoWidth / width.value)
-      
+
       if (isNaN(height.value)) {
         height.value = width.value / (4/3)
       }
-      
+
       videoRef.value.setAttribute('width', width.value.toString())
       videoRef.value.setAttribute('height', height.value.toString())
       if (canvasRef.value) {
@@ -70,12 +70,12 @@ async function takePicture() {
       canvasRef.value.width = width.value
       canvasRef.value.height = height.value
       context.drawImage(videoRef.value, 0, 0, width.value, height.value)
-      
+
       const data = canvasRef.value.toDataURL('image/png')
       if (photoRef.value) {
         photoRef.value.setAttribute('src', data)
         emit('photo-taken', data)
-        
+
         // Automatisch hochladen, nachdem das Foto aufgenommen wurde
         await uploadPicture()
       }
@@ -98,7 +98,7 @@ async function uploadPicture(imageBlob?: Blob) {
 
   try {
     let blob: Blob;
-    
+
     if (imageBlob) {
       // Verwende den übergebenen Blob direkt
       blob = imageBlob;
@@ -108,36 +108,36 @@ async function uploadPicture(imageBlob?: Blob) {
       const response = await fetch(imageData)
       blob = await response.blob()
     }
-    
+
     // Erstellen eines FormData-Objekts für den Upload
     const formData = new FormData()
     formData.append('image', blob, 'camera-image.png')
-    
+
     // Hinzufügen der KI-Analyse-Parameter (immer aktiviert)
     formData.append('analyze_with_ai', 'true')
     formData.append('prompt', aiPrompt.value)
-    
+
     // Backend-Basis-URL aus Umgebungsvariablen
     const backendBaseUrl = import.meta.env.VITE_BACKEND_BASE_URL || '';
-    
+
     // Senden des Bildes an das Backend
     const uploadResponse = await fetch(`${backendBaseUrl}/api/upload-image`, {
       method: 'POST',
       body: formData
     })
-    
+
     if (!uploadResponse.ok) {
       throw new Error(`HTTP error! status: ${uploadResponse.status}`)
     }
-    
+
     const result = await uploadResponse.json()
     uploadStatus.value = 'Bild erfolgreich hochgeladen!'
-    
+
     // Wenn KI-Analyse nicht direkt durchgeführt wurde
     if (!result.ai_analysis) {
       isAnalyzing.value = true
       uploadStatus.value = 'Analysiere Bild mit KI...'
-      
+
       try {
         const analyzeResponse = await fetch(`${backendBaseUrl}/api/analyze-image`, {
           method: 'POST',
@@ -149,11 +149,11 @@ async function uploadPicture(imageBlob?: Blob) {
             prompt: aiPrompt.value
           })
         })
-        
+
         if (!analyzeResponse.ok) {
           throw new Error(`HTTP error! status: ${analyzeResponse.status}`)
         }
-        
+
         const analyzeResult = await analyzeResponse.json()
         result.ai_analysis = analyzeResult.ai_analysis
         uploadStatus.value = 'Bild erfolgreich analysiert!'
@@ -165,7 +165,7 @@ async function uploadPicture(imageBlob?: Blob) {
         isAnalyzing.value = false
       }
     }
-    
+
     emit('photo-uploaded', result)
   } catch (error) {
     console.error('Fehler beim Hochladen:', error)
@@ -177,10 +177,10 @@ async function uploadPicture(imageBlob?: Blob) {
 
 async function analyzeExistingImage(imagePath: string) {
   if (!imagePath) return
-  
+
   isAnalyzing.value = true
   uploadStatus.value = 'Analysiere Bild mit KI...'
-  
+
   try {
     const backendBaseUrl = import.meta.env.VITE_BACKEND_BASE_URL || '';
     const analyzeResponse = await fetch(`${backendBaseUrl}/api/analyze-image`, {
@@ -193,11 +193,11 @@ async function analyzeExistingImage(imagePath: string) {
         prompt: aiPrompt.value
       })
     })
-    
+
     if (!analyzeResponse.ok) {
       throw new Error(`HTTP error! status: ${analyzeResponse.status}`)
     }
-    
+
     const result = await analyzeResponse.json()
     uploadStatus.value = 'Bild erfolgreich analysiert!'
     emit('photo-analyzed', result)
@@ -215,9 +215,9 @@ async function analyzeExistingImage(imagePath: string) {
 async function handleFileUpload(event: Event) {
   const target = event.target as HTMLInputElement;
   if (!target.files || target.files.length === 0) return;
-  
+
   const file = target.files[0];
-  
+
   // Zeige das ausgewählte Bild an
   if (photoRef.value) {
     const reader = new FileReader();
@@ -228,7 +228,7 @@ async function handleFileUpload(event: Event) {
       }
     };
     reader.readAsDataURL(file);
-    
+
     // Automatisch hochladen
     await uploadPicture(file);
   }
@@ -266,22 +266,22 @@ defineExpose({
 <template>
   <div class="camera-container">
     <div class="camera-tabs">
-      <button 
-        @click="activeTab = 'camera'" 
+      <button
+        @click="activeTab = 'camera'"
         :class="{ active: activeTab === 'camera' }"
         class="tab-button"
       >
         Kamera
       </button>
-      <button 
-        @click="activeTab = 'upload'" 
+      <button
+        @click="activeTab = 'upload'"
         :class="{ active: activeTab === 'upload' }"
         class="tab-button"
       >
         Foto auswählen
       </button>
     </div>
-    
+
     <div v-if="activeTab === 'camera'">
       <video ref="videoRef" class="camera-video">Video stream nicht verfügbar.</video>
       <div class="camera-controls">
@@ -290,13 +290,13 @@ defineExpose({
         </button>
       </div>
     </div>
-    
+
     <div v-else-if="activeTab === 'upload'" class="upload-container">
-      <input 
-        type="file" 
-        id="file-upload" 
-        accept="image/*" 
-        @change="handleFileUpload" 
+      <input
+        type="file"
+        id="file-upload"
+        accept="image/*"
+        @change="handleFileUpload"
         class="file-input"
         capture="environment"
       />
@@ -305,24 +305,12 @@ defineExpose({
       </label>
       <p class="upload-hint">Tippen Sie auf den Button, um ein Foto aus Ihrer Mediathek auszuwählen</p>
     </div>
-    
-    <div class="ai-options">
-      <div class="ai-prompt">
-        <label for="ai-prompt">Anweisung für KI:</label>
-        <input 
-          type="text" 
-          id="ai-prompt" 
-          v-model="aiPrompt" 
-          placeholder="Was ist auf diesem Bild zu sehen?"
-        />
-      </div>
-    </div>
-    
-    <canvas ref="canvasRef" class="camera-canvas"></canvas>
+
+    <canvas v-if="photoRef" ref="canvasRef" class="camera-canvas"></canvas>
     <div class="camera-output">
       <img ref="photoRef" alt="Das aufgenommene Foto erscheint hier." />
-      <p v-if="uploadStatus" class="upload-status" :class="{ 
-        'success': uploadStatus.includes('erfolgreich'), 
+      <p v-if="uploadStatus" class="upload-status" :class="{
+        'success': uploadStatus.includes('erfolgreich'),
         'error': uploadStatus.includes('Fehler'),
         'info': uploadStatus.includes('Analysiere') || uploadStatus.includes('hochgeladen')
       }">
