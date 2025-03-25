@@ -1,10 +1,13 @@
 import os
 import uuid
+import json
+import re
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from ai_service import AIService
 from ai_providers.prompt_config import get_prompt
+from tandoor_api import import_recipe, get_auth_token
 
 app = Flask(__name__, static_folder='../dist/frontend', static_url_path='/')
 # CORS für alle Routen aktivieren mit zusätzlichen Optionen
@@ -63,6 +66,91 @@ def upload_image():
         return jsonify({'error': 'Dateityp nicht erlaubt'}), 400
     except Exception as e:
         app.logger.error(f"Fehler beim Hochladen: {str(e)}")
+        return jsonify({'error': f'Serverfehler: {str(e)}'}), 500
+
+@app.route('/api/tandoor-auth', methods=['POST'])
+def tandoor_auth():
+    """Authentifiziert bei Tandoor und gibt ein Token zurück"""
+    try:
+        data = request.json
+        
+        if not data or 'username' not in data or 'password' not in data:
+            return jsonify({'error': 'Benutzername und Passwort erforderlich'}), 400
+        
+        username = data['username']
+        password = data['password']
+        
+        # Token von Tandoor API holen
+        token = get_auth_token(username, password)
+        
+        if token:
+            return jsonify({
+                'success': True,
+                'token': token
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Authentifizierung fehlgeschlagen'
+            }), 401
+            
+    except Exception as e:
+        app.logger.error(f"Fehler bei der Tandoor-Authentifizierung: {str(e)}")
+        return jsonify({'error': f'Serverfehler: {str(e)}'}), 500
+
+@app.route('/api/extract-json-ld', methods=['POST'])
+def extract_json_ld():
+    """Extrahiert JSON-LD aus einer KI-Antwort"""
+    try:
+        data = request.json
+        
+        if not data or 'ai_response' not in data:
+            return jsonify({'error': 'Keine KI-Antwort angegeben'}), 400
+        
+        ai_response = data['ai_response']
+        
+        # Suche nach JSON-LD in der KI-Antwort
+        json_ld_match = re.search(r'```json\s*([\s\S]*?)\s*```', ai_response)
+        if not json_ld_match:
+            return jsonify({'error': 'Kein JSON-LD in der KI-Antwort gefunden'}), 404
+        
+        json_ld_str = json_ld_match.group(1).strip()
+        
+        try:
+            # Versuche, den JSON-String zu parsen
+            json_ld = json.loads(json_ld_str)
+            
+            return jsonify({
+                'success': True,
+                'json_ld': json_ld
+            })
+            
+        except json.JSONDecodeError as e:
+            return jsonify({'error': f'Ungültiges JSON: {str(e)}'}), 400
+        
+    except Exception as e:
+        app.logger.error(f"Fehler beim Extrahieren von JSON-LD: {str(e)}")
+        return jsonify({'error': f'Serverfehler: {str(e)}'}), 500
+
+@app.route('/api/import-to-tandoor', methods=['POST'])
+def import_to_tandoor():
+    """Importiert ein Rezept in Tandoor"""
+    try:
+        data = request.json
+        
+        if not data or 'recipe_json_ld' not in data or 'auth_token' not in data:
+            return jsonify({'error': 'Rezeptdaten und Auth-Token erforderlich'}), 400
+        
+        recipe_json_ld = data['recipe_json_ld']
+        auth_token = data['auth_token']
+        
+        # Rezept in Tandoor importieren
+        result = import_recipe(recipe_json_ld, auth_token)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        app.logger.error(f"Fehler beim Import in Tandoor: {str(e)}")
         return jsonify({'error': f'Serverfehler: {str(e)}'}), 500
 
 @app.route('/')

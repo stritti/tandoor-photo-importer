@@ -11,26 +11,67 @@ from decouple import config
 
 # Konfiguration aus Umgebungsvariablen
 TANDOOR_API_URL = config('TANDOOR_API_URL', default='')
-TANDOOR_API_KEY = config('TANDOOR_API_KEY', default='')
 
 # Logger
 logger = logging.getLogger('tandoor_api')
 
-def import_recipe(recipe_data):
+def get_auth_token(username, password):
+    """
+    Holt ein Authentifizierungstoken von der Tandoor API
+    
+    Args:
+        username: Benutzername für Tandoor
+        password: Passwort für Tandoor
+        
+    Returns:
+        str: Das Authentifizierungstoken oder None bei Fehler
+    """
+    if not TANDOOR_API_URL:
+        logger.error("Tandoor API URL nicht konfiguriert")
+        return None
+    
+    try:
+        logger.info(f"Fordere Auth-Token von {TANDOOR_API_URL}/api-token-auth/ an")
+        response = requests.post(
+            f"{TANDOOR_API_URL}/api-token-auth/",
+            json={"username": username, "password": password}
+        )
+        
+        if response.status_code == 200:
+            token = response.json().get("token")
+            logger.info("Auth-Token erfolgreich erhalten")
+            return token
+        else:
+            logger.error(f"Fehler beim Abrufen des Auth-Tokens: {response.status_code} - {response.text}")
+            return None
+            
+    except Exception as e:
+        logger.error(f"Fehler beim Abrufen des Auth-Tokens: {str(e)}")
+        return None
+
+def import_recipe(recipe_data, auth_token):
     """
     Importiert ein Rezept in Tandoor über die API
     
     Args:
         recipe_data: JSON-LD Daten des Rezepts
+        auth_token: Authentifizierungstoken für die API
         
     Returns:
         dict: Ergebnis des Imports
     """
-    if not TANDOOR_API_URL or not TANDOOR_API_KEY:
-        logger.error("Tandoor API nicht konfiguriert")
+    if not TANDOOR_API_URL:
+        logger.error("Tandoor API URL nicht konfiguriert")
         return {
             "success": False,
-            "error": "Tandoor API nicht konfiguriert"
+            "error": "Tandoor API URL nicht konfiguriert"
+        }
+    
+    if not auth_token:
+        logger.error("Kein Auth-Token angegeben")
+        return {
+            "success": False,
+            "error": "Kein Auth-Token angegeben"
         }
     
     try:
@@ -41,7 +82,7 @@ def import_recipe(recipe_data):
         
         # Sende Anfrage an Tandoor API
         headers = {
-            "Authorization": f"Bearer {TANDOOR_API_KEY}",
+            "Authorization": f"Token {auth_token}",
             "Content-Type": "application/json"
         }
         
