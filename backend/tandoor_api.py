@@ -81,8 +81,11 @@ def import_recipe(recipe_data, auth_token):
         if isinstance(recipe_data, str):
             recipe_data = json.loads(recipe_data)
 
+        logger.info(f"Rezeptdaten: {recipe_data}")
+
         # Prepare the data for import
         import_data = prepare_recipe_data(recipe_data)
+        logger.info(f"Vorbereitete Rezeptdaten: {import_data}")
         
         # Sende Anfrage an Tandoor API
         headers = {
