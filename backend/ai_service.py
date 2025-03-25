@@ -81,9 +81,37 @@ class AIService:
             # Zeige alle verfügbaren Parameter für den OpenAI-Konstruktor
             logger.debug(f"OpenAI.__init__ Parameter: {inspect.signature(OpenAI.__init__)}")
             
-            # Initialisiere den OpenAI-Client nur mit dem API-Key
-            client = OpenAI(api_key=OPENAI_API_KEY)
-            logger.debug("OpenAI Client erfolgreich initialisiert")
+            # Versuche verschiedene Initialisierungsmethoden für den OpenAI-Client
+            client = None
+            try:
+                # Methode 1: Nur mit API-Key
+                logger.debug("Versuche Initialisierung nur mit API-Key")
+                client = OpenAI(api_key=OPENAI_API_KEY)
+            except TypeError as e:
+                logger.warning(f"Fehler bei Methode 1: {str(e)}")
+                # Methode 2: Setze Umgebungsvariable und initialisiere ohne Parameter
+                logger.debug("Versuche Initialisierung über Umgebungsvariable")
+                os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+                try:
+                    client = OpenAI()
+                except Exception as e2:
+                    logger.warning(f"Fehler bei Methode 2: {str(e2)}")
+                    # Methode 3: Verwende nur die notwendigsten Parameter
+                    logger.debug("Versuche Initialisierung mit minimalen Parametern")
+                    try:
+                        client = OpenAI(
+                            api_key=OPENAI_API_KEY,
+                            max_retries=2
+                        )
+                    except Exception as e3:
+                        logger.error(f"Alle Initialisierungsmethoden fehlgeschlagen: {str(e3)}")
+                        raise Exception("Konnte OpenAI-Client nicht initialisieren")
+            
+            if client:
+                logger.debug("OpenAI Client erfolgreich initialisiert")
+            else:
+                logger.error("OpenAI Client konnte nicht initialisiert werden")
+                raise Exception("OpenAI Client ist None nach Initialisierungsversuchen")
             
             logger.debug("Sende Anfrage an OpenAI API")
             response = client.chat.completions.create(
