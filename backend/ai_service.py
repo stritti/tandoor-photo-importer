@@ -1,27 +1,12 @@
-import os
-import base64
 import logging
-import traceback
-import inspect
-from decouple import config
-import requests
-from openai import OpenAI
-import anthropic
-
-# Konfiguration aus Umgebungsvariablen
-AI_PROVIDER = config('AI_PROVIDER', default='openai')
-OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
-OPENAI_MODEL = config('OPENAI_MODEL', default='gpt-4-vision-preview')
-ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
-ANTHROPIC_MODEL = config('ANTHROPIC_MODEL', default='claude-3-opus-20240229')
-MAX_TOKENS = config('MAX_TOKENS', default=300, cast=int)
+from ai_providers.provider_factory import AIProviderFactory
 
 # Logger konfigurieren
 logging.basicConfig(
     level=logging.WARNING,  # Root-Logger auf WARNING setzen
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-# Nur für den ai_service Logger DEBUG-Level aktivieren
+# Nur für den ai_service Logger INFO-Level aktivieren
 logger = logging.getLogger('ai_service')
 logger.setLevel(logging.INFO)
 
@@ -42,221 +27,17 @@ class AIService:
         """
         logger.info(f"Starte Bildanalyse mit Prompt: {prompt}")
         logger.info(f"Bildpfad: {image_path}")
-        logger.info(f"Konfigurierter AI-Provider: {AI_PROVIDER}")
         
-        provider = AI_PROVIDER.lower()
-        
-        if provider == 'openai':
-            logger.info("Verwende OpenAI für die Analyse")
-            return AIService._analyze_with_openai(image_path, prompt)
-        elif provider == 'anthropic':
-            logger.info("Verwende Anthropic Claude für die Analyse")
-            return AIService._analyze_with_anthropic(image_path, prompt)
-        elif provider == 'custom':
-            logger.info("Verwende Custom API für die Analyse")
-            return AIService._analyze_with_custom_api(image_path, prompt)
-        else:
-            logger.error(f"KI-Anbieter '{provider}' nicht unterstützt oder konfiguriert")
+        try:
+            # Provider über Factory holen
+            provider = AIProviderFactory.get_provider()
+            
+            # Bild mit dem Provider analysieren
+            return provider.analyze_image(image_path, prompt)
+            
+        except ValueError as e:
+            logger.error(f"Fehler beim Erstellen des Providers: {str(e)}")
             return {
                 "provider": "none",
-                "error": f"KI-Anbieter '{provider}' nicht unterstützt oder konfiguriert"
-            }
-    
-    @staticmethod
-    def _analyze_with_openai(image_path, prompt):
-        """Analysiert ein Bild mit OpenAI Vision API"""
-        if not OPENAI_API_KEY:
-            logger.error("OpenAI API-Schlüssel nicht konfiguriert")
-            return {
-                "provider": "openai",
-                "error": "OpenAI API-Schlüssel nicht konfiguriert"
-            }
-        
-        try:
-            logger.info("Starte OpenAI Bildanalyse")
-            logger.debug(f"Verwende OpenAI Modell: {OPENAI_MODEL}")
-            logger.debug(f"Max Tokens: {MAX_TOKENS}")
-            
-            # Bild in base64 konvertieren
-            with open(image_path, "rb") as image_file:
-                base64_image = base64.b64encode(image_file.read()).decode('utf-8')
-            
-            # Initialisiere den OpenAI-Client
-            logger.info("Initialisiere OpenAI Client")
-            
-            # OpenAI-Client initialisieren
-            client = None
-            try:
-                # Methode 1: Nur mit API-Key
-                client = OpenAI(api_key=OPENAI_API_KEY)
-            except TypeError as e:
-                # Methode 2: Setze Umgebungsvariable und initialisiere ohne Parameter
-                os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-                try:
-                    client = OpenAI()
-                except Exception:
-                    # Methode 3: Verwende nur die notwendigsten Parameter
-                    try:
-                        client = OpenAI(
-                            api_key=OPENAI_API_KEY,
-                            max_retries=2
-                        )
-                    except Exception as e3:
-                        logger.error(f"Alle Initialisierungsmethoden fehlgeschlagen: {str(e3)}")
-                        raise Exception("Konnte OpenAI-Client nicht initialisieren")
-            
-            if not client:
-                logger.error("OpenAI Client konnte nicht initialisiert werden")
-                raise Exception("OpenAI Client ist None nach Initialisierungsversuchen")
-            
-            logger.info("Sende Anfrage an OpenAI API")
-            response = client.chat.completions.create(
-                model=OPENAI_MODEL,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": prompt},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}"
-                                }
-                            }
-                        ]
-                    }
-                ],
-                max_tokens=MAX_TOKENS
-            )
-            logger.info("Antwort von OpenAI API erhalten")
-            
-            result = {
-                "provider": "openai",
-                "response": response.choices[0].message.content,
-                "model": OPENAI_MODEL
-            }
-            logger.info("OpenAI Bildanalyse erfolgreich abgeschlossen")
-            return result
-            
-        except Exception as e:
-            logger.error(f"Fehler bei OpenAI Bildanalyse: {str(e)}")
-            logger.error(f"Traceback: {traceback.format_exc()}")
-            return {
-                "provider": "openai",
-                "error": str(e)
-            }
-    
-    @staticmethod
-    def _analyze_with_anthropic(image_path, prompt):
-        """Analysiert ein Bild mit Anthropic Claude API"""
-        if not ANTHROPIC_API_KEY:
-            logger.error("Anthropic API-Schlüssel nicht konfiguriert")
-            return {
-                "provider": "anthropic",
-                "error": "Anthropic API-Schlüssel nicht konfiguriert"
-            }
-        
-        try:
-            logger.info("Starte Anthropic Claude Bildanalyse")
-            logger.debug(f"Verwende Anthropic Modell: {ANTHROPIC_MODEL}")
-            logger.debug(f"Max Tokens: {MAX_TOKENS}")
-            
-            # Bild in base64 konvertieren und Medientyp bestimmen
-            with open(image_path, "rb") as image_file:
-                base64_image = base64.b64encode(image_file.read()).decode('utf-8')
-                
-                # Medientyp basierend auf Dateiendung bestimmen
-                media_type = "image/jpeg"  # Standard
-                if image_path.lower().endswith('.png'):
-                    media_type = "image/png"
-                elif image_path.lower().endswith('.gif'):
-                    media_type = "image/gif"
-            
-            # Initialisiere den Anthropic-Client
-            logger.info("Initialisiere Anthropic Client")
-            client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-            
-            logger.info(f"Sende Anfrage an Anthropic API mit Medientyp: {media_type}")
-            message = client.messages.create(
-                model=ANTHROPIC_MODEL,
-                max_tokens=MAX_TOKENS,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": prompt},
-                            {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": base64_image}}
-                        ]
-                    }
-                ]
-            )
-            
-            logger.info("Antwort von Anthropic API erhalten")
-            
-            result = {
-                "provider": "anthropic",
-                "response": message.content[0].text,
-                "model": ANTHROPIC_MODEL
-            }
-            logger.info("Anthropic Bildanalyse erfolgreich abgeschlossen")
-            return result
-            
-        except Exception as e:
-            logger.error(f"Fehler bei Anthropic Bildanalyse: {str(e)}")
-            logger.error(f"Traceback: {traceback.format_exc()}")
-            return {
-                "provider": "anthropic",
-                "error": str(e)
-            }
-    
-    @staticmethod
-    def _analyze_with_custom_api(image_path, prompt):
-        """
-        Beispiel für die Integration eines benutzerdefinierten API-Dienstes
-        Diese Methode kann angepasst werden, um andere KI-Dienste zu unterstützen
-        """
-        CUSTOM_API_URL = config('CUSTOM_API_URL', default='')
-        CUSTOM_API_KEY = config('CUSTOM_API_KEY', default='')
-        
-        if not CUSTOM_API_URL or not CUSTOM_API_KEY:
-            logger.error("Benutzerdefinierte API nicht konfiguriert")
-            return {
-                "provider": "custom",
-                "error": "Benutzerdefinierte API nicht konfiguriert"
-            }
-        
-        try:
-            logger.info("Starte Custom API Bildanalyse")
-            with open(image_path, "rb") as image_file:
-                files = {"image": image_file}
-                data = {"prompt": prompt}
-                headers = {"Authorization": f"Bearer {CUSTOM_API_KEY}"}
-                
-                logger.info("Sende Anfrage an Custom API")
-                response = requests.post(
-                    CUSTOM_API_URL,
-                    files=files,
-                    data=data,
-                    headers=headers
-                )
-                
-                if response.status_code == 200:
-                    logger.info("Custom API Anfrage erfolgreich")
-                    return {
-                        "provider": "custom",
-                        "response": response.json()
-                    }
-                else:
-                    logger.error(f"Custom API Fehler: {response.status_code} - {response.text}")
-                    return {
-                        "provider": "custom",
-                        "error": f"API-Fehler: {response.status_code} - {response.text}"
-                    }
-                    
-        except Exception as e:
-            logger.error(f"Fehler bei Custom API Bildanalyse: {str(e)}")
-            logger.error(f"Traceback: {traceback.format_exc()}")
-            return {
-                "provider": "custom",
                 "error": str(e)
             }
