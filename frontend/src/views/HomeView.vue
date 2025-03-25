@@ -74,13 +74,6 @@ async function analyzeImage() {
           </div>
         </div>
         
-        <button 
-          v-if="uploadResult && !aiResult" 
-          @click="analyzeImage" 
-          class="analyze-button"
-        >
-          Bild mit KI analysieren
-        </button>
       </div>
     </div>
   </main>

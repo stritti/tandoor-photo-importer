@@ -79,7 +79,6 @@ function takePicture() {
   }
 }
 
-const analyzeWithAI = ref(false)
 const aiPrompt = ref('Was ist auf diesem Bild zu sehen?')
 const isAnalyzing = ref(false)
 
@@ -102,8 +101,8 @@ async function uploadPicture() {
     const formData = new FormData()
     formData.append('image', blob, 'camera-image.png')
     
-    // Hinzufügen der KI-Analyse-Parameter, wenn aktiviert
-    formData.append('analyze_with_ai', analyzeWithAI.value.toString())
+    // Hinzufügen der KI-Analyse-Parameter (immer aktiviert)
+    formData.append('analyze_with_ai', 'true')
     formData.append('prompt', aiPrompt.value)
     
     // Backend-Basis-URL aus Umgebungsvariablen
@@ -122,8 +121,8 @@ async function uploadPicture() {
     const result = await uploadResponse.json()
     uploadStatus.value = 'Bild erfolgreich hochgeladen!'
     
-    // Wenn KI-Analyse angefordert wurde, aber nicht direkt durchgeführt
-    if (analyzeWithAI.value && !result.ai_analysis) {
+    // Wenn KI-Analyse nicht direkt durchgeführt wurde
+    if (!result.ai_analysis) {
       isAnalyzing.value = true
       uploadStatus.value = 'Analysiere Bild mit KI...'
       
@@ -228,12 +227,7 @@ defineExpose({
     </div>
     
     <div class="ai-options">
-      <div class="ai-checkbox">
-        <input type="checkbox" id="analyze-with-ai" v-model="analyzeWithAI" />
-        <label for="analyze-with-ai">Mit KI analysieren</label>
-      </div>
-      
-      <div v-if="analyzeWithAI" class="ai-prompt">
+      <div class="ai-prompt">
         <label for="ai-prompt">Anweisung für KI:</label>
         <input 
           type="text" 
