@@ -14,6 +14,7 @@ TANDOOR_API_URL = config('TANDOOR_API_URL', default='')
 
 # Logger
 logger = logging.getLogger('tandoor_api')
+logger.setLevel(logging.INFO)
 
 def get_auth_token(username, password):
     """
