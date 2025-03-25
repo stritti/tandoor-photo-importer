@@ -6,11 +6,14 @@ import inspect
 from decouple import config
 import requests
 from openai import OpenAI
+import anthropic
 
 # Konfiguration aus Umgebungsvariablen
 AI_PROVIDER = config('AI_PROVIDER', default='openai')
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
 OPENAI_MODEL = config('OPENAI_MODEL', default='gpt-4-vision-preview')
+ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
+ANTHROPIC_MODEL = config('ANTHROPIC_MODEL', default='claude-3-opus-20240229')
 MAX_TOKENS = config('MAX_TOKENS', default=300, cast=int)
 
 # Logger konfigurieren
@@ -46,6 +49,9 @@ class AIService:
         if provider == 'openai':
             logger.info("Verwende OpenAI für die Analyse")
             return AIService._analyze_with_openai(image_path, prompt)
+        elif provider == 'anthropic':
+            logger.info("Verwende Anthropic Claude für die Analyse")
+            return AIService._analyze_with_anthropic(image_path, prompt)
         elif provider == 'custom':
             logger.info("Verwende Custom API für die Analyse")
             return AIService._analyze_with_custom_api(image_path, prompt)
@@ -137,6 +143,63 @@ class AIService:
             logger.error(f"Traceback: {traceback.format_exc()}")
             return {
                 "provider": "openai",
+                "error": str(e)
+            }
+    
+    @staticmethod
+    def _analyze_with_anthropic(image_path, prompt):
+        """Analysiert ein Bild mit Anthropic Claude API"""
+        if not ANTHROPIC_API_KEY:
+            logger.error("Anthropic API-Schlüssel nicht konfiguriert")
+            return {
+                "provider": "anthropic",
+                "error": "Anthropic API-Schlüssel nicht konfiguriert"
+            }
+        
+        try:
+            logger.info("Starte Anthropic Claude Bildanalyse")
+            logger.debug(f"Verwende Anthropic Modell: {ANTHROPIC_MODEL}")
+            logger.debug(f"Max Tokens: {MAX_TOKENS}")
+            
+            # Bild in base64 konvertieren
+            with open(image_path, "rb") as image_file:
+                base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+                image_data = f"data:image/jpeg;base64,{base64_image}"
+            
+            # Initialisiere den Anthropic-Client
+            logger.info("Initialisiere Anthropic Client")
+            client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+            
+            logger.info("Sende Anfrage an Anthropic API")
+            message = client.messages.create(
+                model=ANTHROPIC_MODEL,
+                max_tokens=MAX_TOKENS,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": base64_image}}
+                        ]
+                    }
+                ]
+            )
+            
+            logger.info("Antwort von Anthropic API erhalten")
+            
+            result = {
+                "provider": "anthropic",
+                "response": message.content[0].text,
+                "model": ANTHROPIC_MODEL
+            }
+            logger.info("Anthropic Bildanalyse erfolgreich abgeschlossen")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Fehler bei Anthropic Bildanalyse: {str(e)}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            return {
+                "provider": "anthropic",
                 "error": str(e)
             }
     
