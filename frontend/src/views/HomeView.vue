@@ -28,6 +28,7 @@ const isLoading = ref(false)
 const jsonLdData = ref<Record<string, unknown> | null>(null)
 const isImporting = ref(false)
 const importResult = ref<ImportResult | null>(null)
+const aiPrompt = ref('Was ist auf diesem Bild zu sehen?')
 
 // Tandoor Auth
 const showAuthForm = ref(false)
