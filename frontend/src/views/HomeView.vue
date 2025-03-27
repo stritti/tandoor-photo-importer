@@ -2,13 +2,32 @@
 import { ref, watch } from 'vue'
 import CameraUpload from '@/components/CameraUpload.vue'
 
-const uploadResult = ref<any>(null)
-const aiResult = ref<any>(null)
+interface UploadResult {
+  path?: string;
+  ai_analysis?: AIResult;
+  [key: string]: any;
+}
+
+interface AIResult {
+  provider: string;
+  model?: string;
+  response?: string;
+  error?: string;
+}
+
+interface ImportResult {
+  success: boolean;
+  recipe_url?: string;
+  error?: string;
+}
+
+const uploadResult = ref<UploadResult | null>(null)
+const aiResult = ref<AIResult | null>(null)
 const cameraUploadRef = ref<InstanceType<typeof CameraUpload> | null>(null)
 const isLoading = ref(false)
-const jsonLdData = ref<any>(null)
+const jsonLdData = ref<Record<string, unknown> | null>(null)
 const isImporting = ref(false)
-const importResult = ref<any>(null)
+const importResult = ref<ImportResult | null>(null)
 
 // Tandoor Auth
 const showAuthForm = ref(false)
@@ -20,14 +39,14 @@ const authToken = useSessionStorage('tandoorAuthToken', '')
 const isAuthenticating = ref(false)
 const authError = ref('')
 
-function handlePhotoTaken(photoData: string) {
+function handlePhotoTaken(_photoData: string) {
   console.log('Foto aufgenommen!')
   // Zurücksetzen der Ergebnisse bei neuem Foto
   uploadResult.value = null
   aiResult.value = null
 }
 
-function handlePhotoUploaded(result: any) {
+function handlePhotoUploaded(result: UploadResult) {
   uploadResult.value = result
   console.log('Foto hochgeladen!', result)
 
