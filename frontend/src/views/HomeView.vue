@@ -34,9 +34,17 @@ const aiPrompt = ref('Was ist auf diesem Bild zu sehen?')
 const showAuthForm = ref(false)
 const username = ref('')
 const password = ref('')
-import { useSessionStorage } from '@vueuse/core'
 
-const authToken = useSessionStorage('tandoorAuthToken', '')
+// Use regular sessionStorage instead of @vueuse/core
+const authToken = ref(sessionStorage.getItem('tandoorAuthToken') || '')
+// Watch for changes to update sessionStorage
+watch(authToken, (newValue) => {
+  if (newValue) {
+    sessionStorage.setItem('tandoorAuthToken', newValue)
+  } else {
+    sessionStorage.removeItem('tandoorAuthToken')
+  }
+})
 const isAuthenticating = ref(false)
 const authError = ref('')
 
