@@ -56,3 +56,25 @@ flask run
 
 The backend API will be available at http://localhost:5000.
 
+### Running Backend Tests
+The backend uses pytest for testing:
+
+```bash
+# Navigate to backend directory
+cd backend
+
+# Run all tests
+pytest
+
+# Run tests with verbose output
+pytest -v
+
+# Run tests with coverage report
+pytest --cov=.
+```
+
+Make sure you have pytest and pytest-cov installed:
+```bash
+pip install pytest pytest-cov
+```
+
