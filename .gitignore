@@ -140,3 +140,4 @@ dist
 backend/uploads/
 backend/venv/
 __pycache__/
+backend/.coverage
