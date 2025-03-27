@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./backend/
 
 # Frontend-Build kopieren
-COPY --from=frontend-build /app/dist/frontend ./dist/frontend
+COPY --from=frontend-build /app/frontend/dist ./dist/frontend
 
 # Umgebungsvariablen
 ENV FLASK_APP=backend/app.py
