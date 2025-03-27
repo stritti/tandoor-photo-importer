@@ -39,6 +39,7 @@ const authToken = useSessionStorage('tandoorAuthToken', '')
 const isAuthenticating = ref(false)
 const authError = ref('')
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function handlePhotoTaken(_photoData: string): void {
   console.log('Foto aufgenommen!')
   // Zurücksetzen der Ergebnisse bei neuem Foto
