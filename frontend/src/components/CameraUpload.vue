@@ -306,7 +306,7 @@ defineExpose({
         @change="handleFileUpload"
         class="file-input"
         capture="environment"
-      />
+      >
       <label for="file-upload" class="file-upload-button" :class="{ disabled: isUploading || isAnalyzing }">
         {{ isUploading ? 'Wird verarbeitet...' : 'Foto auswählen' }}
       </label>
