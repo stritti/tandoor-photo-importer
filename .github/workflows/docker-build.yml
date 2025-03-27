@@ -1,4 +1,4 @@
-name: Docker Build
+name: Build, Test and Docker Build
 
 on:
   push:
@@ -8,7 +8,70 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  frontend:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
+      
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+      
+      - name: Upload frontend build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-build
+          path: frontend/dist
+          retention-days: 1
+
+  backend:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+      
+      - name: Install backend dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-flask flake8
+      
+      - name: Lint backend
+        working-directory: backend
+        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      
+      - name: Test backend
+        working-directory: backend
+        run: pytest -v
+
+  docker-build:
+    needs: [frontend, backend]
     runs-on: ubuntu-latest
     
     steps:
@@ -28,8 +91,8 @@ jobs:
           cache-to: type=gha,mode=max
 
   # Uncomment to enable pushing to a registry
-  # push:
-  #   needs: build
+  # docker-push:
+  #   needs: docker-build
   #   runs-on: ubuntu-latest
   #   if: github.event_name != 'pull_request'
   #   
