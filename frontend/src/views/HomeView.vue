@@ -5,7 +5,7 @@ import CameraUpload from '@/components/CameraUpload.vue'
 interface UploadResult {
   path?: string;
   ai_analysis?: AIResult;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface AIResult {
@@ -39,7 +39,7 @@ const authToken = useSessionStorage('tandoorAuthToken', '')
 const isAuthenticating = ref(false)
 const authError = ref('')
 
-function handlePhotoTaken(_photoData: string) {
+function handlePhotoTaken(_photoData: string): void {
   console.log('Foto aufgenommen!')
   // Zurücksetzen der Ergebnisse bei neuem Foto
   uploadResult.value = null
