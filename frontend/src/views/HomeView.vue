@@ -35,7 +35,6 @@ const showAuthForm = ref(false)
 const username = ref('')
 const password = ref('')
 
-// Use regular sessionStorage instead of @vueuse/core
 const authToken = ref(sessionStorage.getItem('tandoorAuthToken') || '')
 // Watch for changes to update sessionStorage
 watch(authToken, (newValue) => {
