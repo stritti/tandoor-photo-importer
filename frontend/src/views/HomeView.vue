@@ -30,12 +30,12 @@ function handlePhotoTaken(photoData: string) {
 function handlePhotoUploaded(result: any) {
   uploadResult.value = result
   console.log('Foto hochgeladen!', result)
-  
+
   // Wenn KI-Analyse vorhanden ist, extrahieren
   if (result.ai_analysis) {
     aiResult.value = result.ai_analysis
   }
-  
+
   // Immer den Loading-Status zurücksetzen, wenn Ergebnisse zurückkommen
   isLoading.value = false
 }
@@ -45,7 +45,7 @@ async function analyzeImage() {
     alert('Bitte zuerst ein Foto hochladen!')
     return
   }
-  
+
   isLoading.value = true
   try {
     if (cameraUploadRef.value) {
@@ -62,7 +62,7 @@ async function analyzeImage() {
 // Extrahiert JSON-LD aus der KI-Antwort
 async function extractJsonLd() {
   if (!aiResult.value || !aiResult.value.response) return
-  
+
   isLoading.value = true
   try {
     const backendBaseUrl = import.meta.env.VITE_BACKEND_BASE_URL || '';
@@ -75,11 +75,11 @@ async function extractJsonLd() {
         ai_response: aiResult.value.response
       })
     })
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
-    
+
     const result = await response.json()
     if (result.success) {
       jsonLdData.value = result.json_ld
@@ -100,10 +100,10 @@ async function authenticateTandoor() {
     authError.value = 'Bitte Benutzername und Passwort eingeben'
     return
   }
-  
+
   isAuthenticating.value = true
   authError.value = ''
-  
+
   try {
     const backendBaseUrl = import.meta.env.VITE_BACKEND_BASE_URL || '';
     const response = await fetch(`${backendBaseUrl}/api/tandoor-auth`, {
@@ -116,9 +116,9 @@ async function authenticateTandoor() {
         password: password.value
       })
     })
-    
+
     const result = await response.json()
-    
+
     if (response.ok && result.success) {
       authToken.value = result.token
       showAuthForm.value = false
@@ -138,16 +138,16 @@ async function authenticateTandoor() {
 // Importiert das Rezept in Tandoor
 async function importToTandoor() {
   if (!jsonLdData.value) return
-  
+
   if (!authToken.value) {
     // Wenn kein Token vorhanden ist, Authentifizierungsformular anzeigen
     showAuthForm.value = true
     return
   }
-  
+
   isImporting.value = true
   importResult.value = null
-  
+
   try {
     const backendBaseUrl = import.meta.env.VITE_BACKEND_BASE_URL || '';
     const response = await fetch(`${backendBaseUrl}/api/import-to-tandoor`, {
@@ -160,11 +160,11 @@ async function importToTandoor() {
         auth_token: authToken.value
       })
     })
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
-    
+
     importResult.value = await response.json()
   } catch (error) {
     console.error('Fehler beim Import in Tandoor:', error)
@@ -194,7 +194,7 @@ watch(aiResult, (newValue) => {
       <div class="loading-spinner"></div>
       <div class="loading-text">KI analysiert das Bild...</div>
     </div>
-    
+
     <div class="app-container">
       <h1>Kamera App mit KI-Analyse</h1>
 
@@ -209,22 +209,22 @@ watch(aiResult, (newValue) => {
           <h3>Upload-Ergebnis:</h3>
           <pre>{{ JSON.stringify(uploadResult, null, 2) }}</pre>
         </div>
-        
+
         <div v-if="aiResult" class="ai-result">
           <h3>KI-Analyse:</h3>
           <div class="ai-provider">
             <strong>Anbieter:</strong> {{ aiResult.provider }}
             <span v-if="aiResult.model">({{ aiResult.model }})</span>
           </div>
-          
+
           <div v-if="aiResult.error" class="ai-error">
             <strong>Fehler:</strong> {{ aiResult.error }}
           </div>
-          
+
           <div v-else-if="aiResult.response" class="ai-response">
             <strong>Analyse:</strong>
             <p>{{ aiResult.response }}</p>
-            
+
             <div v-if="jsonLdData" class="json-ld-container">
               <h4>Extrahiertes Rezept:</h4>
               <pre>{{ JSON.stringify(jsonLdData, null, 2) }}</pre>
@@ -239,32 +239,32 @@ watch(aiResult, (newValue) => {
                 <p v-else>Fehler beim Import: {{ importResult.error }}</p>
               </div>
             </div>
-            
+
             <button v-if="!jsonLdData && aiResult.response.includes('```json')" @click="extractJsonLd" class="extract-button">
               JSON-LD extrahieren
             </button>
           </div>
         </div>
-        
+
         <!-- Tandoor Auth Modal -->
         <div v-if="showAuthForm" class="auth-modal">
           <div class="auth-modal-content">
             <h3>Tandoor Anmeldung</h3>
             <p>Bitte geben Sie Ihre Tandoor-Anmeldedaten ein, um das Rezept zu importieren.</p>
-            
+
             <div class="auth-form">
               <div class="form-group">
                 <label for="username">Benutzername:</label>
                 <input type="text" id="username" v-model="username" placeholder="Benutzername" />
               </div>
-              
+
               <div class="form-group">
                 <label for="password">Passwort:</label>
                 <input type="password" id="password" v-model="password" placeholder="Passwort" />
               </div>
-              
+
               <div v-if="authError" class="auth-error">{{ authError }}</div>
-              
+
               <div class="auth-buttons">
                 <button @click="showAuthForm = false" class="cancel-button">Abbrechen</button>
                 <button @click="authenticateTandoor" class="login-button" :disabled="isAuthenticating">
@@ -274,7 +274,7 @@ watch(aiResult, (newValue) => {
             </div>
           </div>
         </div>
-        
+
       </div>
     </div>
   </main>
@@ -290,7 +290,7 @@ watch(aiResult, (newValue) => {
 
 h1 {
   font-size: 2rem;
-  color: #2c3e50;
+  color: #d0d0d0;
   margin-bottom: 2rem;
 }
 

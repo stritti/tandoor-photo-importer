@@ -82,11 +82,6 @@ def import_recipe(recipe_data, auth_token):
             recipe_data = json.loads(recipe_data)
 
         logger.info(f"Rezeptdaten: {recipe_data}")
-
-        # Prepare the data for import
-        #TODO import_data = prepare_recipe_data(recipe_data)
-        import_data = recipe_data
-        logger.info(f"Vorbereitete Rezeptdaten: {import_data}")
         
         # Sende Anfrage an Tandoor API
         headers = {
@@ -95,28 +90,42 @@ def import_recipe(recipe_data, auth_token):
         }
         
         data = {
-            "data": json.dumps(import_data),
+            "data": json.dumps(recipe_data),
             "url": ""
         }
 
         logger.debug(f"Importiere Rezept in Tandoor: {data}")
         
         logger.info(f"Sende Anfrage an Tandoor API: {TANDOOR_API_URL}/api/recipe-from-source/")
-        response = requests.post(
+        recipe_response = requests.post(
             f"{TANDOOR_API_URL}/api/recipe-from-source/",
             json=data,
             headers=headers
         )
-        
-        if response.status_code in [200, 201]:
-            logger.debug(f"{response.status_code}: Rezept-Import-Antwort: {response.json()}")
-            return {
-                "success": True,
-                "recipe_id": response.json().get("id"),
-                "recipe_url": f"{TANDOOR_API_URL}/recipe/{response.json().get('id')}"
-            }
+    
+        if recipe_response.status_code in [200, 201]:
+            logger.debug(f"{recipe_response.status_code}: Rezept-Import-Antwort: {recipe_response.json()}")
+            logger.info(f"Sende Anfrage an Tandoor API: {TANDOOR_API_URL}/api/recipe/")
+            response = requests.post(
+                f"{TANDOOR_API_URL}/api/recipe/",
+                json=recipe_response.json().get('recipe_json'),
+                headers=headers
+            ) 
+            if response.status_code in [200, 201]:
+                return {
+                    "success": True,
+                    "recipe_id": response.json().get("id"),
+                    "recipe_url": f"{TANDOOR_API_URL}/recipe/{response.json().get('id')}"
+                }
+            else:
+                logger.error(f"Fehler beim Import: {response.status_code} - {response.text}")
+                logger.error(recipe_response.json())
+                return {
+                    "success": False,
+                    "error": f"API-Fehler: {response.status_code} - {response.text}"
+                }
         else:
-            logger.error(f"Fehler beim Import: {response.status_code} - {response.text}")
+            logger.error(f"Fehler bei recipe-from-source: {response.status_code} - {response.text}")
             return {
                 "success": False,
                 "error": f"API-Fehler: {response.status_code} - {response.text}"
