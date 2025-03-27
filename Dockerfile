@@ -7,7 +7,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # Finale Stage
-FROM python:3.9-slim
+FROM python:3.13-slim
 WORKDIR /app
 
 # Python-Abhängigkeiten installieren
