@@ -13,6 +13,10 @@ const isUploading = ref(false)
 const activeTab = ref('camera') // 'camera' oder 'upload'
 
 // Emits für Eltern-Komponenten
+const props = defineProps<{
+  prompt: string
+}>()
+
 const emit = defineEmits(['photo-taken', 'photo-uploaded'])
 
 function startCamera() {
@@ -115,7 +119,7 @@ async function uploadPicture(imageBlob?: Blob) {
 
     // Hinzufügen der KI-Analyse-Parameter (immer aktiviert)
     formData.append('analyze_with_ai', 'true')
-    formData.append('prompt', aiPrompt.value)
+    formData.append('prompt', props.prompt)
 
     // Backend-Basis-URL aus Umgebungsvariablen
     const backendBaseUrl = import.meta.env.VITE_BACKEND_BASE_URL || '';

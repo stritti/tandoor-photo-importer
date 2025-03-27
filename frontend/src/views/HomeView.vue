@@ -40,24 +40,6 @@ function handlePhotoUploaded(result: any) {
   isLoading.value = false
 }
 
-async function analyzeImage() {
-  if (!uploadResult.value || !uploadResult.value.path) {
-    alert('Bitte zuerst ein Foto hochladen!')
-    return
-  }
-
-  isLoading.value = true
-  try {
-    if (cameraUploadRef.value) {
-      const result = await cameraUploadRef.value.analyzeExistingImage(uploadResult.value.path)
-      aiResult.value = result.ai_analysis
-    }
-  } catch (error) {
-    console.error('Fehler bei der Analyse:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
 
 // Extrahiert JSON-LD aus der KI-Antwort
 async function extractJsonLd() {
@@ -202,6 +184,7 @@ watch(aiResult, (newValue) => {
         ref="cameraUploadRef"
         @photo-taken="handlePhotoTaken"
         @photo-uploaded="handlePhotoUploaded"
+        :prompt="aiPrompt"
       />
 
       <div v-if="uploadResult" class="result-container">
