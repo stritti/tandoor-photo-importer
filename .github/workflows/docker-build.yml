@@ -123,6 +123,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           outputs: type=docker,dest=/tmp/docker-image.tar
+          build-args: |
+            BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
       
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
