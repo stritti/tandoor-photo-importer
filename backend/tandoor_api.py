@@ -115,7 +115,7 @@ def import_recipe(recipe_data, auth_token):
                 return {
                     "success": True,
                     "recipe_id": response.json().get("id"),
-                    "recipe_url": f"{TANDOOR_API_URL}/recipe/{response.json().get('id')}"
+                    "recipe_url": f"{TANDOOR_API_URL}/view/recipe/{response.json().get('id')}"
                 }
             else:
                 logger.error(f"Fehler beim Import: {response.status_code} - {response.text}")
