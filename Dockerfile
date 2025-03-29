@@ -44,8 +44,10 @@ COPY --from=frontend-build /app/frontend/dist ./dist/frontend
 # Create uploads directory with proper permissions
 RUN mkdir -p uploads && chmod 755 uploads
 
+WORKDIR /app/backend
+
 # Environment variables
-ENV FLASK_APP=backend/app.py
+ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -63,4 +65,4 @@ RUN chown -R appuser:appuser /app
 USER appuser
 
 # Start application
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "4", "backend.app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "4", "app:app"]
