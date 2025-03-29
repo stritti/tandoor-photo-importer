@@ -79,6 +79,7 @@ jobs:
       contents: read
       packages: write
       security-events: write # For vulnerability scanning
+      actions: read # Required for workflow run access
     
     steps:
       - name: Checkout code
@@ -141,6 +142,8 @@ jobs:
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         with:
           sarif_file: 'trivy-results.sarif'
+        permissions:
+          security-events: write
       
       - name: Push Docker image
         uses: docker/build-push-action@v5
