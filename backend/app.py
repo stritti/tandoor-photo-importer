@@ -6,11 +6,9 @@ import logging
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
-import ai_service
+from backend.ai_service import AIService
 from backend.ai_providers.prompt_config import get_prompt
 from backend.tandoor_api import import_recipe, get_auth_token
-
-AIService = ai_service.AIService
 
 
 # Logger konfigurieren
