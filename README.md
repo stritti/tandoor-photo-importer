@@ -2,6 +2,11 @@
 
 Extension for Tandoor receipe app to import hand written receipes by shooting a photo of them.
 
+⚠️ This project is also a test to implement
+it almost only using https://aider.chat
+Let's have a look on the result only using AI.
+
+
 ## Development Setup
 
 ### Prerequisites
