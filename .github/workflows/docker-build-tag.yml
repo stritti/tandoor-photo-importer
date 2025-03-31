@@ -33,8 +33,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/recipe-ai-backend:${{ steps.get_version.outputs.VERSION }}
-            ghcr.io/${{ github.repository_owner }}/recipe-ai-backend:latest
+            ghcr.io/${{ github.repository_owner }}/tandoor-photo-importer:${{ steps.get_version.outputs.VERSION }}
+            ghcr.io/${{ github.repository_owner }}/tandoor-photo-importer:latest
           build-args: |
             VERSION=${{ steps.get_version.outputs.VERSION }}
 
