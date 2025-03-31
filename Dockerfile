@@ -1,3 +1,4 @@
+# Version: 0.2.0
 # Build-Stage für das Frontend
 FROM node:lts-alpine AS frontend-build
 WORKDIR /app/frontend
@@ -24,6 +25,7 @@ RUN python -m venv /opt/venv && \
 
 # Final stage with minimal image
 FROM python:3.9-slim
+LABEL version="0.2.0"
 WORKDIR /app
 
 # Install only runtime dependencies
