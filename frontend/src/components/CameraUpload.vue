@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import CameraTab from './CameraTab.vue'
 import UploadTab from './UploadTab.vue'
 import PhotoPreview from './PhotoPreview.vue'
+import { usePWA } from '../composables/usePWA'
+
+// PWA-Funktionalität
+const { isInstallable, installApp, isOffline } = usePWA()
 
 // Emits für Eltern-Komponenten
 const props = defineProps<{
@@ -179,6 +183,17 @@ defineExpose({
 
 <template>
   <div class="camera-container">
+    <!-- PWA Installation Banner -->
+    <div v-if="isInstallable" class="pwa-install-banner">
+      <p>Installieren Sie diese App auf Ihrem Gerät für eine bessere Erfahrung!</p>
+      <button @click="installApp" class="install-button">Installieren</button>
+    </div>
+
+    <!-- Offline-Hinweis -->
+    <div v-if="isOffline" class="offline-banner">
+      <p>Sie sind offline. Einige Funktionen sind möglicherweise eingeschränkt.</p>
+    </div>
+
     <div class="camera-tabs">
       <button
         @click="activeTab = 'camera'"
@@ -252,5 +267,37 @@ defineExpose({
 .tab-button.active {
   color: #4DBA87;
   border-bottom: 3px solid #4DBA87;
+}
+
+.pwa-install-banner {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.install-button {
+  padding: 0.5rem 1rem;
+  background-color: #4DBA87;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.offline-banner {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #fff3cd;
+  color: #856404;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  text-align: center;
 }
 </style>
