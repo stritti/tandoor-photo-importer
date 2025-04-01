@@ -3,10 +3,9 @@ const CACHE_NAME = 'recipe-analyzer-v1';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/manifest.json',
+  '/manifest.webmanifest',
   '/favicon.ico',
-  '/assets/index.js',
-  '/assets/index.css',
+  '/offline.html'
 ];
 
 // Installation des Service Workers
@@ -38,6 +37,11 @@ self.addEventListener('activate', (event) => {
 
 // Fetch-Event-Handler für Netzwerkanfragen
 self.addEventListener('fetch', (event) => {
+  // Ignoriere chrome-extension Anfragen
+  if (event.request.url.startsWith('chrome-extension://')) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -45,6 +49,12 @@ self.addEventListener('fetch', (event) => {
         if (response) {
           return response;
         }
+        
+        // Nur HTTP(S) URLs cachen
+        if (!event.request.url.startsWith('http')) {
+          return fetch(event.request);
+        }
+        
         return fetch(event.request)
           .then((response) => {
             // Prüfen, ob wir eine gültige Antwort erhalten haben
@@ -59,7 +69,11 @@ self.addEventListener('fetch', (event) => {
               .then((cache) => {
                 // Nur GET-Anfragen cachen
                 if (event.request.method === 'GET') {
-                  cache.put(event.request, responseToCache);
+                  try {
+                    cache.put(event.request, responseToCache);
+                  } catch (error) {
+                    console.error('Caching fehlgeschlagen:', error);
+                  }
                 }
               });
 
