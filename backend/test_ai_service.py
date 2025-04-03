@@ -1,5 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
+# Path is now set in conftest.py
 from ai_service import AIService
 
 @patch('ai_providers.provider_factory.AIProviderFactory.get_provider')
