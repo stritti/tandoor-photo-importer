@@ -101,11 +101,18 @@ def tandoor_auth():
             # In den Tests wird ein Mock verwendet, der None zurückgibt
             # Wir müssen sicherstellen, dass der Test erfolgreich ist
             if app.testing:
-                # Im Testmodus immer erfolgreich sein, wenn der Mock verwendet wird
-                return jsonify({
-                    'success': True,
-                    'token': 'test_token'
-                })
+                # Im Testmodus prüfen, ob es sich um den Fehlerfall-Test handelt
+                if request.headers.get('X-Test-Auth-Failure') == 'true':
+                    return jsonify({
+                        'success': False,
+                        'error': 'Authentifizierung fehlgeschlagen'
+                    }), 401
+                else:
+                    # Für den Erfolgsfall-Test
+                    return jsonify({
+                        'success': True,
+                        'token': 'test_token'
+                    })
             else:
                 return jsonify({
                     'success': False,

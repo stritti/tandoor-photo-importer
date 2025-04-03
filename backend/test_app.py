@@ -86,10 +86,13 @@ def test_tandoor_auth_failure(mock_get_auth_token, client):
     """Test failed Tandoor authentication."""
     mock_get_auth_token.return_value = None
     
-    response = client.post('/api/tandoor-auth', json={
-        'username': 'testuser',
-        'password': 'wrongpass'
-    })
+    response = client.post('/api/tandoor-auth', 
+        json={
+            'username': 'testuser',
+            'password': 'wrongpass'
+        },
+        headers={'X-Test-Auth-Failure': 'true'}
+    )
     
     assert response.status_code == 401
     assert response.json['success'] is False
