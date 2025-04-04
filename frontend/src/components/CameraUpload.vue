@@ -37,8 +37,8 @@ watch(activeTab, (newTab) => {
 
 // Handler für Foto-Aufnahme
 async function handlePhotoTaken(dataUrl: string) {
-  if (photoPreviewRef.value?.photoRef.value) {
-    photoPreviewRef.value.photoRef.value.setAttribute('src', dataUrl);
+  if (photoPreviewRef.value?.photoRef) {
+    photoPreviewRef.value.photoRef.setAttribute('src', dataUrl);
     emit('photo-taken', dataUrl);
     
     // Automatisch hochladen
@@ -48,8 +48,8 @@ async function handlePhotoTaken(dataUrl: string) {
 
 // Handler für Datei-Auswahl
 async function handleFileSelected(data: { dataUrl: string, file: File }) {
-  if (photoPreviewRef.value?.photoRef.value) {
-    photoPreviewRef.value.photoRef.value.setAttribute('src', data.dataUrl as string);
+  if (photoPreviewRef.value?.photoRef) {
+    photoPreviewRef.value.photoRef.setAttribute('src', data.dataUrl as string);
     emit('photo-taken', data.dataUrl);
     
     // Automatisch hochladen
@@ -58,8 +58,8 @@ async function handleFileSelected(data: { dataUrl: string, file: File }) {
 }
 
 async function uploadPicture(imageFile?: File) {
-  if (!photoPreviewRef.value?.photoRef.value || 
-      !photoPreviewRef.value.photoRef.value.getAttribute('src')) {
+  if (!photoPreviewRef.value?.photoRef || 
+      !photoPreviewRef.value.photoRef.getAttribute('src')) {
     alert('Bitte zuerst ein Foto aufnehmen oder auswählen!');
     return;
   }
@@ -76,7 +76,7 @@ async function uploadPicture(imageFile?: File) {
       blob = imageFile;
     } else {
       // Konvertieren des Base64-Bildes in einen Blob
-      const imageData = photoPreviewRef.value.photoRef.value.getAttribute('src') as string;
+      const imageData = photoPreviewRef.value.photoRef.getAttribute('src') as string;
       const response = await fetch(imageData);
       blob = await response.blob();
     }
