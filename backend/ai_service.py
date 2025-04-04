@@ -26,8 +26,14 @@ class AIService:
             provider = AIProviderFactory.get_provider()
             
             # Bild mit dem Provider analysieren
-            return provider.analyze_image(image_path, prompt)
-            
+            try:
+                return provider.analyze_image(image_path, prompt)
+            except Exception as e:
+                logger.error(f"Fehler bei der Bildanalyse: {str(e)}")
+                return {
+                    "provider": provider.provider_name,
+                    "error": str(e)
+                }
         except ValueError as e:
             logger.error(f"Fehler beim Erstellen des Providers: {str(e)}")
             return {
