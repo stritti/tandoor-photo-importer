@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useImageAnalysisStore } from '../stores/imageAnalysisStore'
 
-const props = defineProps<{
-  uploadStatus: string
-  isUploading: boolean
-  isAnalyzing: boolean
-}>()
-
+const store = useImageAnalysisStore()
 const photoRef = ref<HTMLImageElement | null>(null)
+
+// Wenn sich das Bild im Store ändert, aktualisiere das angezeigte Bild
+watch(() => store.currentImageData, (newImageData) => {
+  if (photoRef.value && newImageData) {
+    photoRef.value.src = newImageData;
+  }
+})
 
 defineExpose({
   photoRef
@@ -17,16 +20,20 @@ defineExpose({
 <template>
   <div class="camera-output">
     <img ref="photoRef" alt="Das aufgenommene Foto erscheint hier." />
-    <p v-if="uploadStatus" class="upload-status" :class="{
-      'success': uploadStatus.includes('erfolgreich'),
-      'error': uploadStatus.includes('Fehler'),
-      'info': uploadStatus.includes('Analysiere') || uploadStatus.includes('hochgeladen')
+    <p v-if="store.uploadStatus" class="upload-status" :class="{
+      'success': store.uploadStatus.includes('erfolgreich'),
+      'error': store.uploadStatus.includes('Fehler'),
+      'info': store.uploadStatus.includes('Analysiere') || store.uploadStatus.includes('hochgeladen')
     }">
-      {{ uploadStatus }}
-      <div v-if="isUploading || isAnalyzing" class="spinner-container">
+      {{ store.uploadStatus }}
+      <div v-if="store.isUploading || store.isAnalyzing" class="spinner-container">
         <div class="spinner"></div>
       </div>
     </p>
+    <div v-if="store.analysisResult" class="analysis-result">
+      <h3>Analyse-Ergebnis:</h3>
+      <p>{{ store.analysisResult }}</p>
+    </div>
   </div>
 </template>
 
@@ -38,6 +45,15 @@ defineExpose({
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.analysis-result {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  width: 100%;
+  border-left: 4px solid #4DBA87;
 }
 
 .camera-output img {

@@ -1,12 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useImageAnalysisStore } from '../stores/imageAnalysisStore'
 
-const props = defineProps<{
-  isUploading: boolean
-  isAnalyzing: boolean
-}>()
-
-const emit = defineEmits(['photo-taken'])
+const store = useImageAnalysisStore()
 
 const videoRef = ref<HTMLVideoElement | null>(null)
 const canvasRef = ref<HTMLCanvasElement | null>(null)
@@ -72,7 +68,23 @@ function takePicture() {
       context.drawImage(videoRef.value, 0, 0, width.value, height.value)
 
       const data = canvasRef.value.toDataURL('image/png')
-      emit('photo-taken', data)
+      store.setCurrentImageData(data)
+      
+      // Bild aus DataURL in File-Objekt umwandeln
+      const byteString = atob(data.split(',')[1])
+      const mimeString = data.split(',')[0].split(':')[1].split(';')[0]
+      const ab = new ArrayBuffer(byteString.length)
+      const ia = new Uint8Array(ab)
+      
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i)
+      }
+      
+      const blob = new Blob([ab], { type: mimeString })
+      const file = new File([blob], "camera-image.png", { type: "image/png" })
+      
+      // Bild hochladen und analysieren
+      store.uploadAndAnalyzeImage(file)
     }
   }
 }
@@ -96,8 +108,8 @@ defineExpose({
   <div>
     <video ref="videoRef" class="camera-video">Video stream nicht verfügbar.</video>
     <div class="camera-controls">
-      <button @click="takePicture" class="camera-button" :disabled="isUploading || isAnalyzing">
-        {{ isUploading || isAnalyzing ? 'Wird verarbeitet...' : 'Foto aufnehmen und analysieren' }}
+      <button @click="takePicture" class="camera-button" :disabled="store.isUploading || store.isAnalyzing">
+        {{ store.isUploading || store.isAnalyzing ? 'Wird verarbeitet...' : 'Foto aufnehmen und analysieren' }}
       </button>
     </div>
     <canvas ref="canvasRef" class="camera-canvas"></canvas>

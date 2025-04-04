@@ -1,10 +1,7 @@
 <script setup lang="ts">
-const props = defineProps<{
-  isUploading: boolean
-  isAnalyzing: boolean
-}>()
+import { useImageAnalysisStore } from '../stores/imageAnalysisStore'
 
-const emit = defineEmits(['file-selected'])
+const store = useImageAnalysisStore()
 
 async function handleFileUpload(event: Event) {
   const target = event.target as HTMLInputElement;
@@ -16,10 +13,9 @@ async function handleFileUpload(event: Event) {
   const reader = new FileReader();
   reader.onload = (e) => {
     if (e.target) {
-      emit('file-selected', {
-        dataUrl: e.target.result,
-        file: file
-      });
+      const dataUrl = e.target.result as string;
+      store.setCurrentImageData(dataUrl);
+      store.uploadAndAnalyzeImage(file);
     }
   };
   reader.readAsDataURL(file);
@@ -35,8 +31,8 @@ async function handleFileUpload(event: Event) {
       @change="handleFileUpload"
       class="file-input"
     >
-    <label for="file-upload" class="file-upload-button" :class="{ disabled: isUploading || isAnalyzing }">
-      {{ isUploading || isAnalyzing ? 'Wird verarbeitet...' : 'Foto auswählen' }}
+    <label for="file-upload" class="file-upload-button" :class="{ disabled: store.isUploading || store.isAnalyzing }">
+      {{ store.isUploading || store.isAnalyzing ? 'Wird verarbeitet...' : 'Foto auswählen' }}
     </label>
     <p class="upload-hint">Tippen Sie auf den Button, um ein Foto aus Ihrer Mediathek auszuwählen</p>
   </div>
