@@ -6,7 +6,7 @@ from .anthropic_provider import AnthropicProvider
 from .custom_provider import CustomProvider
 
 # Konfiguration aus Umgebungsvariablen
-AI_PROVIDER = config('AI_PROVIDER', default='openai')
+AI_PROVIDER = config('AI_PROVIDER', default='openai').strip()
 
 # Logger
 logger = logging.getLogger('ai_service')
