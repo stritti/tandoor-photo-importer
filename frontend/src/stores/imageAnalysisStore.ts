@@ -43,7 +43,10 @@ export const useImageAnalysisStore = defineStore('imageAnalysis', () => {
       // Optional: Prompt-Typ hinzufügen
       // formData.append('prompt_type', 'general')
       
-      const response = await fetch('/api/upload-image', {
+      // Basis-URL aus Umgebungsvariablen oder Fallback
+      const baseUrl = import.meta.env.VITE_BACKEND_BASE_URL || ''
+      
+      const response = await fetch(`${baseUrl}/api/upload-image`, {
         method: 'POST',
         body: formData
       })
