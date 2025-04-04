@@ -7,60 +7,62 @@ export const useImageAnalysisStore = defineStore('imageAnalysis', () => {
   const isAnalyzing = ref(false)
   const uploadStatus = ref('')
   const analysisResult = ref('')
-  
+
   // Bild-Daten
   const currentImageData = ref('')
-  
+
   // Funktionen
   function setUploading(status: boolean) {
     isUploading.value = status
   }
-  
+
   function setAnalyzing(status: boolean) {
     isAnalyzing.value = status
   }
-  
+
   function setUploadStatus(status: string) {
     uploadStatus.value = status
   }
-  
+
   function setAnalysisResult(result: string) {
     analysisResult.value = result
   }
-  
+
   function setCurrentImageData(data: string) {
     currentImageData.value = data
   }
-  
+
   async function uploadAndAnalyzeImage(file: File) {
     try {
       setUploading(true)
       setUploadStatus('Bild wird hochgeladen...')
-      
+
       const formData = new FormData()
-      formData.append('file', file)
-      
+      formData.append('image', file)
+
       // Optional: Prompt-Typ hinzufügen
       // formData.append('prompt_type', 'general')
-      
+
       // Basis-URL aus Umgebungsvariablen oder Fallback
       const baseUrl = import.meta.env.VITE_BACKEND_BASE_URL || ''
-      
+
+      console.log('Basis-URL:', baseUrl)
+
       const response = await fetch(`${baseUrl}/api/upload-image`, {
         method: 'POST',
         body: formData
       })
-      
+
       if (!response.ok) {
         throw new Error(`HTTP Fehler: ${response.status}`)
       }
-      
+
       setUploading(false)
       setUploadStatus('Bild erfolgreich hochgeladen. Analysiere...')
       setAnalyzing(true)
-      
+
       const data = await response.json()
-      
+
       setAnalyzing(false)
       setAnalysisResult(data.analysis)
       setUploadStatus('Analyse erfolgreich abgeschlossen.')
@@ -71,7 +73,7 @@ export const useImageAnalysisStore = defineStore('imageAnalysis', () => {
       console.error('Fehler beim Hochladen/Analysieren:', error)
     }
   }
-  
+
   function reset() {
     isUploading.value = false
     isAnalyzing.value = false
@@ -80,10 +82,10 @@ export const useImageAnalysisStore = defineStore('imageAnalysis', () => {
     currentImageData.value = ''
   }
 
-  return { 
-    isUploading, 
-    isAnalyzing, 
-    uploadStatus, 
+  return {
+    isUploading,
+    isAnalyzing,
+    uploadStatus,
     analysisResult,
     currentImageData,
     setUploading,
