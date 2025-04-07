@@ -1,5 +1,5 @@
 import logging
-from .ai_providers.provider_factory import AIProviderFactory
+from ai_providers.provider_factory import AIProviderFactory
 
 # Nur für den ai_service Logger INFO-Level aktivieren
 logger = logging.getLogger('ai_service')
