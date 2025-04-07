@@ -52,7 +52,7 @@ def test_upload_image_invalid_extension(client):
     assert response.status_code == 400
     assert 'error' in response.json
 
-@patch('backend.ai_service.AIService.analyze_image')
+@patch('app.AIService.analyze_image') # Corrected patch target
 def test_upload_image_success(mock_analyze_image, client):
     """Test successful image upload."""
     mock_analyze_image.return_value = {'provider': 'test', 'response': 'Test response'}
