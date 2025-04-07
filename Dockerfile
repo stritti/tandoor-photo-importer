@@ -10,7 +10,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # Build-Stage für Python dependencies
-FROM python:3.11-slim AS python-deps
+FROM python:3.13-slim AS python-deps
 WORKDIR /app
 # Install build dependencies for Python packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -24,7 +24,7 @@ RUN python -m venv /opt/venv && \
     /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # Final stage with minimal image
-FROM python:3.11-slim
+FROM python:3.13-slim
 LABEL version="0.2.0"
 WORKDIR /app
 
