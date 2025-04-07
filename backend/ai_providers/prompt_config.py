@@ -18,7 +18,7 @@ PROMPTS = {
     # Rezept-Analyse
     "recipe": "I have old cooking recipes on paper, which I want to digitalize and upload to my App Tandoor.\
         Tandoor could import recipes in JSON-LD best. For the correct format refer to https://developers.google.com/search/docs/appearance/structured-data/recipe and https://schema.org/Recipe \
-        Please extract the receipe of the given file and summarize it in two formats: first readable for me and second in JSON-LD to be bossible to import it to Tandoor.\
+        Please extract the receipe of the given file and summarize it in two formats: first readable for me and second in JSON-LD to be possible to import it to Tandoor.\
         If you are unsure and something is not readable, please let me know. Mark any unsure suggestions. It is important to get accurate digital version of receipe.\
         Respect always language of recipe and answer always in same language which you found in the source! Do not use the promt language. Always the Language of the image.\
         If you find any ingredients, please extract them and provide the amount and unit.\
