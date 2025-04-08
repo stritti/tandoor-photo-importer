@@ -3,7 +3,7 @@ import traceback
 import requests
 from decouple import config
 
-from base_provider import BaseAIProvider
+from .base_provider import BaseAIProvider
 
 # Konfiguration aus Umgebungsvariablen
 CUSTOM_API_URL = config('CUSTOM_API_URL', default='')
