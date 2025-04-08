@@ -1,9 +1,10 @@
 import pytest
 from unittest.mock import patch, MagicMock
 # Path is now set in conftest.py
-from ai_service import AIService
+from backend.ai_service import AIService # Import from backend package
 
-@patch('ai_providers.provider_factory.AIProviderFactory.get_provider')
+# Patch where AIProviderFactory is looked up within the ai_service module
+@patch('backend.ai_service.AIProviderFactory.get_provider')
 def test_analyze_image_success(mock_get_provider):
     """Test successful image analysis."""
     # Setup mock provider
@@ -23,7 +24,8 @@ def test_analyze_image_success(mock_get_provider):
     assert result['provider'] == 'test_provider'
     assert result['response'] == 'This is a picture of food.'
 
-@patch('ai_providers.provider_factory.AIProviderFactory.get_provider')
+# Patch where AIProviderFactory is looked up within the ai_service module
+@patch('backend.ai_service.AIProviderFactory.get_provider')
 def test_analyze_image_default_prompt(mock_get_provider):
     """Test image analysis with default prompt."""
     # Setup mock provider
@@ -37,7 +39,8 @@ def test_analyze_image_default_prompt(mock_get_provider):
     # Assertions
     mock_provider.analyze_image.assert_called_once_with('test_image.jpg', 'Was ist auf diesem Bild zu sehen?')
 
-@patch('ai_providers.provider_factory.AIProviderFactory.get_provider')
+# Patch where AIProviderFactory is looked up within the ai_service module
+@patch('backend.ai_service.AIProviderFactory.get_provider')
 def test_analyze_image_provider_error(mock_get_provider):
     """Test error handling when provider raises exception."""
     # Setup mock to raise an exception
@@ -54,7 +57,8 @@ def test_analyze_image_provider_error(mock_get_provider):
     # This test might need adjustment based on actual error handling behavior
     assert isinstance(result, dict)
 
-@patch('ai_providers.provider_factory.AIProviderFactory.get_provider')
+# Patch where AIProviderFactory is looked up within the ai_service module
+@patch('backend.ai_service.AIProviderFactory.get_provider')
 def test_analyze_image_factory_error(mock_get_provider):
     """Test error handling when factory raises exception."""
     # Setup mock to raise an exception
