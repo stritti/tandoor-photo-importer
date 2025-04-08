@@ -5,7 +5,7 @@ import traceback
 from decouple import config
 from openai import OpenAI
 
-from base_provider import BaseAIProvider
+from .base_provider import BaseAIProvider
 
 # Konfiguration aus Umgebungsvariablen
 OPENAI_API_KEY = config('OPENAI_API_KEY', default='')

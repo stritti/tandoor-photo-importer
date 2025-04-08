@@ -1,9 +1,9 @@
 import logging
 from decouple import config
 
-from openai_provider import OpenAIProvider
-from anthropic_provider import AnthropicProvider
-from custom_provider import CustomProvider
+from .openai_provider import OpenAIProvider
+from .anthropic_provider import AnthropicProvider
+from .custom_provider import CustomProvider
 
 # Konfiguration aus Umgebungsvariablen
 AI_PROVIDER = config('AI_PROVIDER', default='openai').strip()
