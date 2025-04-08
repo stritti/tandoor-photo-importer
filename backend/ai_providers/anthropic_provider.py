@@ -7,7 +7,7 @@ from PIL import Image
 from decouple import config
 import anthropic
 
-from base_provider import BaseAIProvider
+from .base_provider import BaseAIProvider
 
 # Konfiguration aus Umgebungsvariablen
 ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
