@@ -10,7 +10,7 @@ import requests
 from decouple import config
 
 # Konfiguration aus Umgebungsvariablen
-TANDOOR_API_URL = config('TANDOOR_API_URL', default='')
+TANDOOR_API_URL = config('TANDOOR_API_URL', default='https://example.com')
 
 # Logger
 logger = logging.getLogger('tandoor_api')
