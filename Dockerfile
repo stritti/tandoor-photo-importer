@@ -46,6 +46,9 @@ COPY --from=frontend-build /app/frontend/dist ./dist/frontend
 # Create uploads directory with proper permissions
 RUN mkdir -p uploads && chmod 755 uploads
 
+# Copy .env file if it exists
+COPY backend/.env* ./backend/ || true
+
 WORKDIR /app/backend
 
 # Environment variables
@@ -67,4 +70,4 @@ RUN chown -R appuser:appuser /app
 USER appuser
 
 # Start application
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "4", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "4", "--chdir", "/app/backend", "app:app"]
