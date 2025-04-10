@@ -57,17 +57,6 @@ async function startCamera() {
       await startCamera(); // Versuche es erneut mit der Standardkamera
     }
   }
-    .then((mediaStream) => {
-      stream.value = mediaStream
-      if (videoRef.value) {
-        videoRef.value.srcObject = mediaStream
-        videoRef.value.play()
-      }
-    })
-    .catch((err) => {
-      console.error(`Ein Fehler ist aufgetreten: ${err}`)
-      alert('Kamerazugriff nicht möglich. Bitte erlauben Sie den Zugriff auf Ihre Kamera.')
-    })
 
   videoRef.value.addEventListener('canplay', () => {
     if (!streaming.value && videoRef.value) {
