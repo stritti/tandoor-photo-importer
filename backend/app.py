@@ -7,7 +7,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from ai_service import AIService
-from backd.ai_providers.prompt_config import get_prompt
+from ai_providers.prompt_config import get_prompt
 from tandoor_api import import_recipe, get_auth_token
 
 
