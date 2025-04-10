@@ -10,11 +10,53 @@ const streaming = ref(false)
 const width = ref(320)
 const height = ref(0)
 const stream = ref<MediaStream | null>(null)
+const availableCameras = ref<MediaDeviceInfo[]>([])
+const selectedCameraId = ref<string | null>(null)
 
-function startCamera() {
+async function getCameraList() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    availableCameras.value = devices.filter(device => device.kind === 'videoinput')
+    if (availableCameras.value.length > 0 && !selectedCameraId.value) {
+      // Optional: Wähle die erste Kamera standardmäßig aus, wenn keine ausgewählt ist
+      // selectedCameraId.value = availableCameras.value[0].deviceId;
+    }
+  } catch (err) {
+    console.error("Fehler beim Auflisten der Kameras: ", err)
+  }
+}
+
+async function startCamera() {
+  if (streaming.value) {
+    stopCamera() // Stoppe den aktuellen Stream, bevor ein neuer gestartet wird
+  }
   if (!videoRef.value) return
 
-  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+  const constraints: MediaStreamConstraints = {
+    video: selectedCameraId.value
+      ? { deviceId: { exact: selectedCameraId.value } }
+      : { facingMode: 'environment' }, // Standardmäßig Rückkamera
+    audio: false
+  }
+
+  try {
+    const mediaStream = await navigator.mediaDevices.getUserMedia(constraints)
+    stream.value = mediaStream
+    if (videoRef.value) {
+      videoRef.value.srcObject = mediaStream
+      videoRef.value.play()
+      // Rufe die Kameraliste erneut auf, um sicherzustellen, dass die Labels verfügbar sind
+      await getCameraList()
+    }
+  } catch (err) {
+    console.error(`Ein Fehler ist aufgetreten: ${err}`)
+    alert('Kamerazugriff nicht möglich. Bitte erlauben Sie den Zugriff auf Ihre Kamera oder wählen Sie eine andere Kamera aus.')
+    // Setze die Auswahl zurück, falls die ausgewählte Kamera fehlschlägt
+    if (selectedCameraId.value) {
+      selectedCameraId.value = null;
+      await startCamera(); // Versuche es erneut mit der Standardkamera
+    }
+  }
     .then((mediaStream) => {
       stream.value = mediaStream
       if (videoRef.value) {
@@ -48,6 +90,7 @@ function startCamera() {
 
 function stopCamera() {
   if (stream.value) {
+    console.log("Stopping camera stream");
     stream.value.getTracks().forEach(track => {
       track.stop()
     })
@@ -59,8 +102,17 @@ function stopCamera() {
   }
 }
 
+async function switchCamera(event: Event) {
+  const target = event.target as HTMLSelectElement;
+  const deviceId = target.value;
+  if (deviceId && deviceId !== selectedCameraId.value) {
+    selectedCameraId.value = deviceId;
+    await startCamera(); // Starte die Kamera mit der neuen ID neu
+  }
+}
+
 function takePicture() {
-  if (width.value && height.value && canvasRef.value && videoRef.value) {
+  if (width.value && height.value && canvasRef.value && videoRef.value && streaming.value) {
     const context = canvasRef.value.getContext('2d')
     if (context) {
       canvasRef.value.width = width.value
@@ -89,8 +141,9 @@ function takePicture() {
   }
 }
 
-onMounted(() => {
-  startCamera()
+onMounted(async () => {
+  await getCameraList() // Versuche, die Liste vor dem Start zu laden
+  await startCamera()
 })
 
 onUnmounted(() => {
@@ -108,7 +161,16 @@ defineExpose({
   <div>
     <video ref="videoRef" class="camera-video" autoplay playsinline>Video stream nicht verfügbar.</video>
     <div class="camera-controls">
-      <button @click="takePicture" class="camera-button" :disabled="store.isUploading || store.isAnalyzing">
+      <div v-if="availableCameras.length > 1" class="camera-select-wrapper">
+        <label for="camera-select">Kamera:</label>
+        <select id="camera-select" :value="selectedCameraId" @change="switchCamera" class="camera-select">
+          <option :value="null">Standard</option>
+          <option v-for="camera in availableCameras" :key="camera.deviceId" :value="camera.deviceId">
+            {{ camera.label || `Kamera ${availableCameras.indexOf(camera) + 1}` }}
+          </option>
+        </select>
+      </div>
+      <button @click="takePicture" class="camera-button" :disabled="!streaming || store.isUploading || store.isAnalyzing">
         {{ store.isUploading || store.isAnalyzing ? 'Wird verarbeitet...' : 'Foto aufnehmen und analysieren' }}
       </button>
     </div>
@@ -129,6 +191,21 @@ defineExpose({
   display: flex;
   gap: 1rem;
   margin: 1rem 0;
+  align-items: center; /* Zentriert Elemente vertikal */
+}
+
+.camera-select-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.camera-select {
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: white;
+  cursor: pointer;
 }
 
 .camera-button {
