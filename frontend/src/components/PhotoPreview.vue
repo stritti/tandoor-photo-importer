@@ -26,10 +26,10 @@ defineExpose({
       'info': store.uploadStatus.includes('Analysiere') || store.uploadStatus.includes('hochgeladen')
     }">
       {{ store.uploadStatus }}
-      <div v-if="store.isUploading || store.isAnalyzing" class="spinner-container">
-        <div class="spinner"></div>
-      </div>
     </p>
+    <div v-if="store.isUploading || store.isAnalyzing" class="spinner-container">
+      <div class="spinner"></div>
+    </div>
     <div v-if="store.analysisResult" class="analysis-result">
       <h3>Analyse-Ergebnis:</h3>
       <p>{{ store.analysisResult }}</p>

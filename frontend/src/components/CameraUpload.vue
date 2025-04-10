@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import CameraTab from './CameraTab.vue'
 import UploadTab from './UploadTab.vue'
 import PhotoPreview from './PhotoPreview.vue'

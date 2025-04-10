@@ -1,9 +1,5 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
-import { useImageAnalysisStore } from './stores/imageAnalysisStore'
-
-// Store initialisieren
-const store = useImageAnalysisStore()
 </script>
 
 <template>
