@@ -46,8 +46,8 @@ COPY --from=frontend-build /app/frontend/dist ./dist/frontend
 # Create uploads directory with proper permissions
 RUN mkdir -p uploads && chmod 755 uploads
 
-# Copy .env file if it exists (using a safer approach)
-COPY backend/.env /app/backend/.env 2>/dev/null || touch /app/backend/.env
+# Create .env file
+RUN touch /app/backend/.env
 
 WORKDIR /app/backend
 
