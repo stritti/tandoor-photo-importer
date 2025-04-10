@@ -5,8 +5,6 @@ import json
 import io
 from unittest.mock import MagicMock, patch
 
-# Import the real app for testing - path is now set in conftest.py
-# Import from backend package
 from app import app as flask_app
 from ai_service import AIService
 from tandoor_api import get_auth_token, import_recipe, prepare_recipe_data, convert_time_to_minutes

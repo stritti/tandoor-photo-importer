@@ -1,7 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-# Path is now set in conftest.py
-from ai_service import AIService # Import from backend package
+from ai_service import AIService
 
 # Patch where AIProviderFactory is looked up within the ai_service module
 @patch('ai_service.AIProviderFactory.get_provider')
