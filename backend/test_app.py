@@ -54,7 +54,7 @@ def test_upload_image_invalid_extension(client):
     assert 'error' in response.json
 
 # Patch where AIService is looked up within the app module
-@patch('backend.app.AIService.analyze_image')
+@patch('app.AIService.analyze_image')
 def test_upload_image_success(mock_analyze_image, client):
     """Test successful image upload."""
     mock_analyze_image.return_value = {'provider': 'test', 'response': 'Test response'}
@@ -70,7 +70,7 @@ def test_upload_image_success(mock_analyze_image, client):
     assert response.json['ai_analysis'] == {'provider': 'test', 'response': 'Test response'}
 
 # Patch where get_auth_token is looked up within the app module
-@patch('backend.app.get_auth_token')
+@patch('app.get_auth_token')
 def test_tandoor_auth_success(mock_get_auth_token, client):
     """Test successful Tandoor authentication."""
     mock_get_auth_token.return_value = 'test_token'
@@ -85,7 +85,7 @@ def test_tandoor_auth_success(mock_get_auth_token, client):
     assert response.json['token'] == 'test_token'
 
 # Patch where get_auth_token is looked up within the app module
-@patch('backend.app.get_auth_token')
+@patch('app.get_auth_token')
 def test_tandoor_auth_failure(mock_get_auth_token, client):
     """Test failed Tandoor authentication."""
     mock_get_auth_token.return_value = None
@@ -140,7 +140,7 @@ def test_extract_json_ld_no_json(client):
     assert 'error' in response.json
 
 # Patch where import_recipe is looked up within the app module
-@patch('backend.app.import_recipe')
+@patch('app.import_recipe')
 def test_import_to_tandoor_success(mock_import_recipe, client):
     """Test successful Tandoor import."""
     mock_import_recipe.return_value = {
@@ -166,7 +166,7 @@ def test_import_to_tandoor_success(mock_import_recipe, client):
 
 # Tests for AIService
 # Patch where AIProviderFactory is looked up within the ai_service module
-@patch('backend.ai_service.AIProviderFactory.get_provider')
+@patch('ai_service.AIProviderFactory.get_provider')
 def test_ai_service_analyze_image(mock_get_provider):
     """Test AIService.analyze_image method."""
     # Setup mock provider
@@ -186,7 +186,7 @@ def test_ai_service_analyze_image(mock_get_provider):
     assert result == {'provider': 'test_provider', 'response': 'Test analysis'}
 
 # Patch where AIProviderFactory is looked up within the ai_service module
-@patch('backend.ai_service.AIProviderFactory.get_provider')
+@patch('ai_service.AIProviderFactory.get_provider')
 def test_ai_service_error_handling(mock_get_provider):
     """Test AIService error handling."""
     # Setup mock to raise an exception
@@ -201,7 +201,7 @@ def test_ai_service_error_handling(mock_get_provider):
 
 # Tests for tandoor_api functions
 # Patch where requests is looked up within the tandoor_api module
-@patch('backend.tandoor_api.requests.post')
+@patch('tandoor_api.requests.post')
 def test_get_auth_token_success(mock_post):
     """Test successful auth token retrieval."""
     # Setup mock response
@@ -212,7 +212,7 @@ def test_get_auth_token_success(mock_post):
     
     # Call the function
     # Patch TANDOOR_API_URL within the tandoor_api module
-    with patch('backend.tandoor_api.TANDOOR_API_URL', 'https://example.com'):
+    with patch('tandoor_api.TANDOOR_API_URL', 'https://example.com'):
         token = get_auth_token('testuser', 'testpass')
     
     # Assertions
@@ -220,7 +220,7 @@ def test_get_auth_token_success(mock_post):
     mock_post.assert_called_once()
 
 # Patch where requests is looked up within the tandoor_api module
-@patch('backend.tandoor_api.requests.post')
+@patch('tandoor_api.requests.post')
 def test_get_auth_token_failure(mock_post):
     """Test failed auth token retrieval."""
     # Setup mock response
@@ -230,7 +230,7 @@ def test_get_auth_token_failure(mock_post):
     
     # Call the function
     # Patch TANDOOR_API_URL within the tandoor_api module
-    with patch('backend.tandoor_api.TANDOOR_API_URL', 'https://example.com'):
+    with patch('tandoor_api.TANDOOR_API_URL', 'https://example.com'):
         token = get_auth_token('testuser', 'wrongpass')
     
     # Assertions
@@ -245,7 +245,7 @@ def test_convert_time_to_minutes():
     assert convert_time_to_minutes(None) == 0
 
 # Patch where requests is looked up within the tandoor_api module
-@patch('backend.tandoor_api.requests.post')
+@patch('tandoor_api.requests.post')
 def test_import_recipe_success(mock_post):
     """Test successful recipe import."""
     # Setup mock responses for the two API calls
@@ -261,7 +261,7 @@ def test_import_recipe_success(mock_post):
     
     # Call the function
     # Patch TANDOOR_API_URL within the tandoor_api module
-    with patch('backend.tandoor_api.TANDOOR_API_URL', 'https://example.com'):
+    with patch('tandoor_api.TANDOOR_API_URL', 'https://example.com'):
         result = import_recipe({'name': 'Test Recipe'}, 'test_token')
     
     # Assertions

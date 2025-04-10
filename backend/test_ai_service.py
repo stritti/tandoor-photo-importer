@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 from ai_service import AIService # Import from backend package
 
 # Patch where AIProviderFactory is looked up within the ai_service module
-@patch('backend.ai_service.AIProviderFactory.get_provider')
+@patch('ai_service.AIProviderFactory.get_provider')
 def test_analyze_image_success(mock_get_provider):
     """Test successful image analysis."""
     # Setup mock provider
@@ -25,7 +25,7 @@ def test_analyze_image_success(mock_get_provider):
     assert result['response'] == 'This is a picture of food.'
 
 # Patch where AIProviderFactory is looked up within the ai_service module
-@patch('backend.ai_service.AIProviderFactory.get_provider')
+@patch('ai_service.AIProviderFactory.get_provider')
 def test_analyze_image_default_prompt(mock_get_provider):
     """Test image analysis with default prompt."""
     # Setup mock provider
@@ -40,7 +40,7 @@ def test_analyze_image_default_prompt(mock_get_provider):
     mock_provider.analyze_image.assert_called_once_with('test_image.jpg', 'Was ist auf diesem Bild zu sehen?')
 
 # Patch where AIProviderFactory is looked up within the ai_service module
-@patch('backend.ai_service.AIProviderFactory.get_provider')
+@patch('ai_service.AIProviderFactory.get_provider')
 def test_analyze_image_provider_error(mock_get_provider):
     """Test error handling when provider raises exception."""
     # Setup mock to raise an exception
@@ -58,7 +58,7 @@ def test_analyze_image_provider_error(mock_get_provider):
     assert isinstance(result, dict)
 
 # Patch where AIProviderFactory is looked up within the ai_service module
-@patch('backend.ai_service.AIProviderFactory.get_provider')
+@patch('ai_service.AIProviderFactory.get_provider')
 def test_analyze_image_factory_error(mock_get_provider):
     """Test error handling when factory raises exception."""
     # Setup mock to raise an exception
