@@ -3,7 +3,7 @@ from unittest.mock import patch, MagicMock
 import json
 # Path is now set in conftest.py
 # Import from backend package
-from backend.tandoor_api import (
+from tandoor_api import (
     prepare_recipe_data,
     extract_food_name,
     extract_amount,
