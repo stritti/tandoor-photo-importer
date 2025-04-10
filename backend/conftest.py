@@ -21,6 +21,8 @@ def setup_test_environment():
     
     # Set environment variables for testing
     os.environ['FLASK_ENV'] = 'testing'
+    # Ensure a valid AI_PROVIDER is set for tests, overriding .env
+    os.environ['AI_PROVIDER'] = 'none' 
     
     yield
     
