@@ -18,7 +18,7 @@ logging.basicConfig(
 )
 
 app = Flask(__name__, static_folder='../dist/frontend', static_url_path='/')
-app.testing = False
+# app.testing = False
 # CORS für alle Routen aktivieren mit zusätzlichen Optionen
 CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
