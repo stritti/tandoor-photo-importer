@@ -14,7 +14,7 @@ const stream = ref<MediaStream | null>(null)
 function startCamera() {
   if (!videoRef.value) return
 
-  navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
     .then((mediaStream) => {
       stream.value = mediaStream
       if (videoRef.value) {
@@ -69,20 +69,20 @@ function takePicture() {
 
       const data = canvasRef.value.toDataURL('image/png')
       store.setCurrentImageData(data)
-      
+
       // Bild aus DataURL in File-Objekt umwandeln
       const byteString = atob(data.split(',')[1])
       const mimeString = data.split(',')[0].split(':')[1].split(';')[0]
       const ab = new ArrayBuffer(byteString.length)
       const ia = new Uint8Array(ab)
-      
+
       for (let i = 0; i < byteString.length; i++) {
         ia[i] = byteString.charCodeAt(i)
       }
-      
+
       const blob = new Blob([ab], { type: mimeString })
       const file = new File([blob], "camera-image.png", { type: "image/png" })
-      
+
       // Bild hochladen und analysieren
       store.uploadAndAnalyzeImage(file)
     }
@@ -106,7 +106,7 @@ defineExpose({
 
 <template>
   <div>
-    <video ref="videoRef" class="camera-video">Video stream nicht verfügbar.</video>
+    <video ref="videoRef" class="camera-video" autoplay playsinline>Video stream nicht verfügbar.</video>
     <div class="camera-controls">
       <button @click="takePicture" class="camera-button" :disabled="store.isUploading || store.isAnalyzing">
         {{ store.isUploading || store.isAnalyzing ? 'Wird verarbeitet...' : 'Foto aufnehmen und analysieren' }}
