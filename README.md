@@ -1,3 +1,5 @@
+⚠️ This project is not maintained any more. Feature is now included directly in Tandoor.
+
 # tandoor-photo-importer
 
 Extension for Tandoor receipe app to import hand written receipes by shooting a photo of them.
